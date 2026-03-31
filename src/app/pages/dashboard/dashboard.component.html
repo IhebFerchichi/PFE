@@ -1,0 +1,54 @@
+<h1 class="page-title">Dashboard</h1>
+
+<div *ngIf="loading" style="display:flex;gap:12px;align-items:center;">
+  <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+  <span>Loading...</span>
+</div>
+
+<div class="grid grid-3" *ngIf="!loading">
+
+  <mat-card>
+    <mat-card-title>LFP Pack</mat-card-title>
+    <mat-card-content>
+      <mat-chip-set>
+        <mat-chip [ngClass]="isOnline(lfpLatest?.ts) ? 'ok' : 'bad'">
+          {{ isOnline(lfpLatest?.ts) ? 'ONLINE' : 'OFFLINE' }}
+        </mat-chip>
+      </mat-chip-set>
+
+      <div class="kv">
+        <div><b>V</b>: {{ lfpLatest?.packVoltage ?? '-' }}</div>
+        <div><b>I</b>: {{ lfpLatest?.packCurrent ?? '-' }}</div>
+        <div><b>T</b>: {{ lfpLatest?.temperature ?? '-' }}</div>
+        <div><b>TS</b>: {{ lfpLatest?.ts | date:"dd MMM yyyy 'at' HH:mm:ss" }}</div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-title>Supercap Pack</mat-card-title>
+    <mat-card-content>
+      <mat-chip-set>
+        <mat-chip [ngClass]="isOnline(scLatest?.ts) ? 'ok' : 'bad'">
+          {{ isOnline(scLatest?.ts) ? 'ONLINE' : 'OFFLINE' }}
+        </mat-chip>
+      </mat-chip-set>
+
+      <div class="kv">
+        <div><b>V</b>: {{ scLatest?.packVoltage ?? '-' }}</div>
+        <div><b>I</b>: {{ scLatest?.packCurrent ?? '-' }}</div>
+        <div><b>T</b>: {{ scLatest?.temperature ?? '-' }}</div>
+        <div><b>TS</b>: {{ scLatest?.ts | date:"dd MMM yyyy 'at' HH:mm:ss" }}</div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-title>Active Alerts</mat-card-title>
+    <mat-card-content>
+      <div class="big">{{ activeAlerts.length }}</div>
+      <div class="small">alerts currently active</div>
+    </mat-card-content>
+  </mat-card>
+
+</div>

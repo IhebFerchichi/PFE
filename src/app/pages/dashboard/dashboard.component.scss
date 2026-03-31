@@ -1,0 +1,50 @@
+.kv {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+  color: var(--text-main);
+}
+
+.kv > div {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fbfcff 0%, #f4f7fc 100%);
+  border: 1px solid #e2e9f5;
+}
+
+.big {
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--brand-blue-dark);
+  letter-spacing: -1px;
+}
+
+.small {
+  color: var(--text-muted);
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+mat-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+mat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover) !important;
+}
+
+mat-chip.ok {
+  background: var(--success-bg) !important;
+  color: var(--success-text) !important;
+  font-weight: 800;
+  border: 1px solid rgba(31, 122, 69, 0.18);
+}
+
+mat-chip.bad {
+  background: var(--danger-bg) !important;
+  color: var(--danger-text) !important;
+  font-weight: 800;
+  border: 1px solid rgba(198, 40, 40, 0.14);
+}

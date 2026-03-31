@@ -1,0 +1,31 @@
+.tbl {
+  width: 100%;
+  background: transparent;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: 18px;
+}
+
+h3 {
+  margin: 20px 0 12px;
+  color: var(--brand-blue-dark);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+table {
+  border: 1px solid var(--border-light);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.mat-mdc-cell,
+.mat-mdc-header-cell {
+  padding: 16px 18px;
+}
+
+.mat-mdc-row:nth-child(even) {
+  background: #fcfdff;
+}

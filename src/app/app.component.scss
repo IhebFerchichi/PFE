@@ -1,0 +1,106 @@
+.app-shell {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: auto;
+  line-height: normal;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-light);
+  box-shadow: 0 8px 24px rgba(35, 57, 116, 0.08);
+}
+
+.topbar-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  min-height: 86px;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.brand-logo {
+  height: 64px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-text {
+  line-height: 1.1;
+}
+
+.brand-subtitle {
+  font-size: 20px;
+  color: var(--brand-blue-dark);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.top-menu {
+  background: transparent !important;
+  border-bottom: none !important;
+  min-width: 0;
+}
+
+.top-menu .ant-menu-item {
+  color: var(--text-muted) !important;
+  font-weight: 800;
+  font-size: 20px;
+  padding-inline: 20px !important;
+}
+
+.top-menu .ant-menu-item:hover {
+  color: var(--brand-red) !important;
+}
+
+.top-menu .ant-menu-item-selected {
+  color: var(--brand-blue) !important;
+  border-bottom-color: var(--brand-blue) !important;
+}
+
+.content-area {
+  background: transparent;
+  padding: 10px 0 0;
+}
+
+@media (max-width: 900px) {
+  .topbar-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: 14px;
+    padding-bottom: 10px;
+  }
+
+  .brand-logo {
+    height: 52px;
+  }
+
+  .brand-subtitle {
+    font-size: 16px;
+  }
+
+  .top-menu {
+    width: 100%;
+  }
+
+  .top-menu .ant-menu-item {
+    font-size: 16px;
+    padding-inline: 12px !important;
+  }
+}

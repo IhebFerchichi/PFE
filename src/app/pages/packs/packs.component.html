@@ -1,0 +1,114 @@
+<h1 class="page-title">Packs</h1>
+
+<div *ngIf="loading" class="loading-row">
+  <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+  <span>Loading pack history...</span>
+</div>
+
+<mat-tab-group>
+  <mat-tab label="LFP">
+    <div class="grid">
+      <mat-card class="section">
+        <mat-card-title>Latest Pack</mat-card-title>
+        <mat-card-content class="kv">
+          <div><b>V</b>: {{ latestValue(lfpLatest, 'packVoltage', 'pack_voltage') ?? '-' }}</div>
+          <div><b>I</b>: {{ latestValue(lfpLatest, 'packCurrent', 'pack_current') ?? '-' }}</div>
+          <div><b>T</b>: {{ latestValue(lfpLatest, 'temperature', 'temperature') ?? '-' }}</div>
+          <div><b>TS</b>: {{ lfpLatest?.ts ? (lfpLatest.ts | date:"dd MMM yyyy 'at' HH:mm:ss") : '-' }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="section">
+        <mat-card-title>LFP Trends (last hour)</mat-card-title>
+        <mat-card-content class="chartGrid">
+          <app-line-chart title="Voltage" [points]="lfpV" yLabel="V" [height]="260"></app-line-chart>
+          <app-line-chart title="Current" [points]="lfpI" yLabel="A" [height]="260"></app-line-chart>
+          <app-line-chart title="Temperature" [points]="lfpT" yLabel="°C" [height]="260"></app-line-chart>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="section">
+        <mat-card-title>Cells (click a cell to see its chart)</mat-card-title>
+        <mat-card-content>
+          <div class="cellGrid">
+            <button
+              type="button"
+              class="cellBtn"
+              *ngFor="let c of lfpCells.sort(byIndex)"
+              (click)="selectLfpCell(cellIndexOf(c))"
+              [class.selected]="selectedLfpCell === cellIndexOf(c)">
+              <div class="idx">#{{ cellIndexOf(c) }}</div>
+              <div class="val">{{ cellVoltageOf(c) }}</div>
+              <div class="bal" [class.on]="cellBalancingOf(c)">
+                BAL: {{ cellBalancingOf(c) }}
+              </div>
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="section" *ngIf="selectedLfpCell !== null">
+        <mat-card-title>
+          LFP Cell {{ selectedLfpCell }} Voltage (last hour)
+          <button type="button" class="closeBtn" (click)="clearLfpCell()">✕</button>
+        </mat-card-title>
+        <mat-card-content>
+          <app-line-chart [points]="lfpCellSeries" yLabel="V" [height]="260"></app-line-chart>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </mat-tab>
+
+  <mat-tab label="Supercap">
+    <div class="grid">
+      <mat-card class="section">
+        <mat-card-title>Latest Pack</mat-card-title>
+        <mat-card-content class="kv">
+          <div><b>V</b>: {{ latestValue(scLatest, 'packVoltage', 'pack_voltage') ?? '-' }}</div>
+          <div><b>I</b>: {{ latestValue(scLatest, 'packCurrent', 'pack_current') ?? '-' }}</div>
+          <div><b>T</b>: {{ latestValue(scLatest, 'temperature', 'temperature') ?? '-' }}</div>
+          <div><b>TS</b>: {{ scLatest?.ts ? (scLatest.ts | date:"dd MMM yyyy 'at' HH:mm:ss") : '-' }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="section">
+        <mat-card-title>Supercap Trends (last hour)</mat-card-title>
+        <mat-card-content class="chartGrid">
+          <app-line-chart title="Voltage" [points]="scV" yLabel="V" [height]="260"></app-line-chart>
+          <app-line-chart title="Current" [points]="scI" yLabel="A" [height]="260"></app-line-chart>
+          <app-line-chart title="Temperature" [points]="scT" yLabel="°C" [height]="260"></app-line-chart>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="section">
+        <mat-card-title>Cells (click a cell to see its chart)</mat-card-title>
+        <mat-card-content>
+          <div class="cellGrid">
+            <button
+              type="button"
+              class="cellBtn"
+              *ngFor="let c of scCells.sort(byIndex)"
+              (click)="selectScCell(cellIndexOf(c))"
+              [class.selected]="selectedScCell === cellIndexOf(c)">
+              <div class="idx">#{{ cellIndexOf(c) }}</div>
+              <div class="val">{{ cellVoltageOf(c) }}</div>
+              <div class="bal" [class.on]="cellBalancingOf(c)">
+                BAL: {{ cellBalancingOf(c) }}
+              </div>
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="section" *ngIf="selectedScCell !== null">
+        <mat-card-title>
+          Supercap Cell {{ selectedScCell }} Voltage (last hour)
+          <button type="button" class="closeBtn" (click)="clearScCell()">✕</button>
+        </mat-card-title>
+        <mat-card-content>
+          <app-line-chart [points]="scCellSeries" yLabel="V" [height]="260"></app-line-chart>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </mat-tab>
+</mat-tab-group>

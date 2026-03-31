@@ -1,0 +1,21 @@
+<div class="chart-card" [style.height.px]="height">
+  <div class="chart-header" *ngIf="title || yLabel">
+    <div class="chart-title-wrap">
+      <div class="chart-title" *ngIf="title">{{ title }}</div>
+      <div class="chart-subtitle" *ngIf="yLabel">{{ yLabel }} monitoring</div>
+    </div>
+
+    <div class="chart-badge" *ngIf="yLabel">
+      {{ yLabel }}
+    </div>
+  </div>
+
+  <div class="chart-body">
+    <canvas #canvas></canvas>
+
+    <div class="empty-state" *ngIf="!points || points.length === 0">
+      <div class="empty-title">No data available</div>
+      <div class="empty-text">The chart will appear when measurements arrive.</div>
+    </div>
+  </div>
+</div>
