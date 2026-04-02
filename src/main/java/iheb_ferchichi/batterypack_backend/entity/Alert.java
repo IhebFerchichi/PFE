@@ -20,6 +20,9 @@ public class Alert {
     @Column(nullable = false)
     private String packType;      // LFP / SUPERCAP
 
+    @Column(name = "bms_id", length = 100)
+    private String bmsId;
+
     @Column(nullable = false)
     private String source;        // BQ / STM / BACKEND / AI
 
@@ -80,6 +83,14 @@ public class Alert {
 
     public void setSource(String source) {
         this.source = source;
+    }
+
+    public String getBmsId() {
+        return bmsId;
+    }
+
+    public void setBmsId(String bmsId) {
+        this.bmsId = bmsId;
     }
 
     public String getAlertCode() {

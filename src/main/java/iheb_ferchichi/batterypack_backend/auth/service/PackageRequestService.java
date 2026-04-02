@@ -1,6 +1,7 @@
 package iheb_ferchichi.batterypack_backend.auth.service;
 
 import iheb_ferchichi.batterypack_backend.auth.dto.CreatePackageRequestDto;
+import iheb_ferchichi.batterypack_backend.auth.dto.PackageRequestResponse;
 import iheb_ferchichi.batterypack_backend.auth.dto.ReviewPackageRequestDto;
 import iheb_ferchichi.batterypack_backend.auth.entity.*;
 import iheb_ferchichi.batterypack_backend.auth.repository.CustomerPackageRepository;
@@ -8,7 +9,6 @@ import iheb_ferchichi.batterypack_backend.auth.repository.PackageDeviceRepositor
 import iheb_ferchichi.batterypack_backend.auth.repository.PackageRequestRepository;
 import iheb_ferchichi.batterypack_backend.auth.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -34,12 +34,9 @@ public class PackageRequestService {
         this.packageDeviceRepository = packageDeviceRepository;
         this.userRepository = userRepository;
     }
-
-
-
-    public PackageRequest createRequest(Long userId, CreatePackageRequestDto dto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    @Transactional
+    public PackageRequestResponse createRequest(String userEmail, CreatePackageRequestDto dto) {
+        User user = getUserByEmail(userEmail);
 
         PackageRequest request = new PackageRequest();
         request.setUser(user);
@@ -48,22 +45,27 @@ public class PackageRequestService {
         request.setStatus(PackageRequestStatus.PENDING);
         request.setRequestedAt(OffsetDateTime.now());
 
-        return packageRequestRepository.save(request);
-    }
-
-    public List<PackageRequest> getUserRequests(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        return packageRequestRepository.findByUserOrderByRequestedAtDesc(user);
-    }
-
-    public List<PackageRequest> getPendingRequests() {
-        return packageRequestRepository.findByStatusOrderByRequestedAtAsc(PackageRequestStatus.PENDING);
+        return PackageRequestResponse.fromEntity(packageRequestRepository.save(request));
     }
 
     @Transactional
-    public PackageRequest approveRequest(Long requestId, Long adminId, ReviewPackageRequestDto dto) {
+    public List<PackageRequestResponse> getUserRequests(String userEmail) {
+        User user = getUserByEmail(userEmail);
+
+        return packageRequestRepository.findByUserOrderByRequestedAtDesc(user).stream()
+                .map(PackageRequestResponse::fromEntity)
+                .toList();
+    }
+
+    @Transactional
+    public List<PackageRequestResponse> getPendingRequests() {
+        return packageRequestRepository.findByStatusOrderByRequestedAtAsc(PackageRequestStatus.PENDING).stream()
+                .map(PackageRequestResponse::fromEntity)
+                .toList();
+    }
+
+    @Transactional
+    public PackageRequestResponse approveRequest(Long requestId, String adminEmail, ReviewPackageRequestDto dto) {
         PackageRequest request = packageRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Package request not found"));
 
@@ -71,8 +73,7 @@ public class PackageRequestService {
             throw new IllegalStateException("Request already reviewed");
         }
 
-        User admin = userRepository.findById(adminId)
-                .orElseThrow(() -> new IllegalArgumentException("Admin not found"));
+        User admin = getAdminByEmail(adminEmail);
 
         if (dto.getLfpBmsId() == null || dto.getLfpBmsId().isBlank()) {
             throw new IllegalArgumentException("LFP BMS ID is required");
@@ -82,11 +83,18 @@ public class PackageRequestService {
             throw new IllegalArgumentException("Supercap BMS ID is required");
         }
 
-        if (packageDeviceRepository.findByBmsId(dto.getLfpBmsId()).isPresent()) {
+        String lfpBmsId = dto.getLfpBmsId().trim();
+        String supercapBmsId = dto.getSupercapBmsId().trim();
+
+        if (lfpBmsId.equalsIgnoreCase(supercapBmsId)) {
+            throw new IllegalArgumentException("LFP BMS ID and Supercap BMS ID must be different");
+        }
+
+        if (packageDeviceRepository.findByBmsId(lfpBmsId).isPresent()) {
             throw new IllegalArgumentException("LFP BMS ID already assigned");
         }
 
-        if (packageDeviceRepository.findByBmsId(dto.getSupercapBmsId()).isPresent()) {
+        if (packageDeviceRepository.findByBmsId(supercapBmsId).isPresent()) {
             throw new IllegalArgumentException("Supercap BMS ID already assigned");
         }
 
@@ -103,14 +111,14 @@ public class PackageRequestService {
         PackageDevice lfpDevice = new PackageDevice();
         lfpDevice.setCustomerPackage(customerPackage);
         lfpDevice.setPackType(PackType.LFP);
-        lfpDevice.setBmsId(dto.getLfpBmsId().trim());
+        lfpDevice.setBmsId(lfpBmsId);
         lfpDevice.setEnabled(true);
         packageDeviceRepository.save(lfpDevice);
 
         PackageDevice supercapDevice = new PackageDevice();
         supercapDevice.setCustomerPackage(customerPackage);
         supercapDevice.setPackType(PackType.SUPERCAP);
-        supercapDevice.setBmsId(dto.getSupercapBmsId().trim());
+        supercapDevice.setBmsId(supercapBmsId);
         supercapDevice.setEnabled(true);
         packageDeviceRepository.save(supercapDevice);
 
@@ -119,10 +127,11 @@ public class PackageRequestService {
         request.setReviewedBy(admin);
         request.setAdminComment(dto.getAdminComment());
 
-        return packageRequestRepository.save(request);
+        return PackageRequestResponse.fromEntity(packageRequestRepository.save(request));
     }
 
-    public PackageRequest rejectRequest(Long requestId, Long adminId, String adminComment) {
+    @Transactional
+    public PackageRequestResponse rejectRequest(Long requestId, String adminEmail, String adminComment) {
         PackageRequest request = packageRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Package request not found"));
 
@@ -130,19 +139,31 @@ public class PackageRequestService {
             throw new IllegalStateException("Request already reviewed");
         }
 
-        User admin = userRepository.findById(adminId)
-                .orElseThrow(() -> new IllegalArgumentException("Admin not found"));
+        User admin = getAdminByEmail(adminEmail);
 
         request.setStatus(PackageRequestStatus.REJECTED);
         request.setReviewedAt(OffsetDateTime.now());
         request.setReviewedBy(admin);
         request.setAdminComment(adminComment);
 
-        return packageRequestRepository.save(request);
+        return PackageRequestResponse.fromEntity(packageRequestRepository.save(request));
     }
 
     private String generatePackageCode() {
         long count = customerPackageRepository.count() + 1;
         return String.format("PKG-%05d", count);
+    }
+
+    private User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    private User getAdminByEmail(String email) {
+        User user = getUserByEmail(email);
+        if (user.getRole() != Role.ADMIN) {
+            throw new IllegalArgumentException("Admin privileges required");
+        }
+        return user;
     }
 }

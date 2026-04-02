@@ -1,6 +1,7 @@
 package iheb_ferchichi.batterypack_backend.service;
 
 
+import iheb_ferchichi.batterypack_backend.auth.entity.PackType;
 import iheb_ferchichi.batterypack_backend.dto.PackStatusResponse;
 import iheb_ferchichi.batterypack_backend.dto.SystemStatusResponse;
 import iheb_ferchichi.batterypack_backend.entity.LfpCellData;
@@ -27,28 +28,85 @@ public class PackStatusService {
     private final LfpCellDataRepository lfpCellRepo;
     private final SupercapPackDataRepository supercapPackRepo;
     private final SupercapCellDataRepository supercapCellRepo;
+    private final TelemetryAccessService telemetryAccessService;
 
     public PackStatusService(LfpPackDataRepository lfpPackRepo,
                              LfpCellDataRepository lfpCellRepo,
                              SupercapPackDataRepository supercapPackRepo,
-                             SupercapCellDataRepository supercapCellRepo) {
+                             SupercapCellDataRepository supercapCellRepo,
+                             TelemetryAccessService telemetryAccessService) {
         this.lfpPackRepo = lfpPackRepo;
         this.lfpCellRepo = lfpCellRepo;
         this.supercapPackRepo = supercapPackRepo;
         this.supercapCellRepo = supercapCellRepo;
+        this.telemetryAccessService = telemetryAccessService;
     }
 
     public PackStatusResponse getLfpStatus() {
         Optional<LfpPackData> opt = lfpPackRepo.findTopByOrderByTsDesc();
+        return opt.map(this::toLfpStatus).orElse(null);
+    }
+
+    public PackStatusResponse getLfpStatus(String userEmail) {
+        Optional<LfpPackData> opt = telemetryAccessService.isAdmin(userEmail)
+                ? lfpPackRepo.findTopByOrderByTsDesc()
+                : lfpPackRepo.findTopByBmsIdInOrderByTsDesc(telemetryAccessService.getAccessibleBmsIds(userEmail, PackType.LFP));
         if (opt.isEmpty()) {
             return null;
         }
 
-        LfpPackData pack = opt.get();
+        return toLfpStatus(opt.get());
+    }
+
+    public PackStatusResponse getSupercapStatus() {
+        Optional<SupercapPackData> opt = supercapPackRepo.findTopByOrderByTsDesc();
+        return opt.map(this::toSupercapStatus).orElse(null);
+    }
+
+    public PackStatusResponse getSupercapStatus(String userEmail) {
+        Optional<SupercapPackData> opt = telemetryAccessService.isAdmin(userEmail)
+                ? supercapPackRepo.findTopByOrderByTsDesc()
+                : supercapPackRepo.findTopByBmsIdInOrderByTsDesc(telemetryAccessService.getAccessibleBmsIds(userEmail, PackType.SUPERCAP));
+        if (opt.isEmpty()) {
+            return null;
+        }
+
+        return toSupercapStatus(opt.get());
+    }
+
+    public SystemStatusResponse getSystemStatus() {
+        PackStatusResponse lfp = getLfpStatus();
+        PackStatusResponse supercap = getSupercapStatus();
+        return buildSystemStatus(lfp, supercap);
+    }
+
+    public SystemStatusResponse getSystemStatus(String userEmail) {
+        PackStatusResponse lfp = getLfpStatus(userEmail);
+        PackStatusResponse supercap = getSupercapStatus(userEmail);
+        return buildSystemStatus(lfp, supercap);
+    }
+
+    private SystemStatusResponse buildSystemStatus(PackStatusResponse lfp, PackStatusResponse supercap) {
+
+        SystemStatusResponse response = new SystemStatusResponse();
+        response.setServerTime(OffsetDateTime.now());
+        response.setLfp(lfp);
+        response.setSupercap(supercap);
+
+        boolean bothOnline = lfp != null && Boolean.TRUE.equals(lfp.getOnline())
+                && supercap != null && Boolean.TRUE.equals(supercap.getOnline());
+
+        response.setBothOnline(bothOnline);
+
+        return response;
+    }
+
+    private PackStatusResponse toLfpStatus(LfpPackData pack) {
         List<LfpCellData> cells = lfpCellRepo.findByPackOrderByCellIndexAsc(pack);
 
         PackStatusResponse response = new PackStatusResponse();
         response.setPackType("LFP");
+        response.setBmsId(pack.getBmsId());
         response.setTs(pack.getTs());
         response.setPackVoltage(pack.getPackVoltage());
         response.setPackCurrent(pack.getPackCurrent());
@@ -61,17 +119,12 @@ public class PackStatusService {
         return response;
     }
 
-    public PackStatusResponse getSupercapStatus() {
-        Optional<SupercapPackData> opt = supercapPackRepo.findTopByOrderByTsDesc();
-        if (opt.isEmpty()) {
-            return null;
-        }
-
-        SupercapPackData pack = opt.get();
+    private PackStatusResponse toSupercapStatus(SupercapPackData pack) {
         List<SupercapCellData> cells = supercapCellRepo.findByPackOrderByCellIndexAsc(pack);
 
         PackStatusResponse response = new PackStatusResponse();
         response.setPackType("SUPERCAP");
+        response.setBmsId(pack.getBmsId());
         response.setTs(pack.getTs());
         response.setPackVoltage(pack.getPackVoltage());
         response.setPackCurrent(pack.getPackCurrent());
@@ -80,23 +133,6 @@ public class PackStatusService {
 
         fillCellStatsForSupercap(response, cells);
         fillFreshness(response, pack.getTs());
-
-        return response;
-    }
-
-    public SystemStatusResponse getSystemStatus() {
-        PackStatusResponse lfp = getLfpStatus();
-        PackStatusResponse supercap = getSupercapStatus();
-
-        SystemStatusResponse response = new SystemStatusResponse();
-        response.setServerTime(OffsetDateTime.now());
-        response.setLfp(lfp);
-        response.setSupercap(supercap);
-
-        boolean bothOnline = lfp != null && Boolean.TRUE.equals(lfp.getOnline())
-                && supercap != null && Boolean.TRUE.equals(supercap.getOnline());
-
-        response.setBothOnline(bothOnline);
 
         return response;
     }

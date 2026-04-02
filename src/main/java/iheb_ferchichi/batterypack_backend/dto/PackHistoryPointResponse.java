@@ -7,6 +7,7 @@ import java.time.OffsetDateTime;
 public class PackHistoryPointResponse {
 
     private OffsetDateTime ts;
+    private String bmsId;
     private BigDecimal packVoltage;
     private BigDecimal packCurrent;
     private BigDecimal temperature;
@@ -21,6 +22,14 @@ public class PackHistoryPointResponse {
 
     public void setTs(OffsetDateTime ts) {
         this.ts = ts;
+    }
+
+    public String getBmsId() {
+        return bmsId;
+    }
+
+    public void setBmsId(String bmsId) {
+        this.bmsId = bmsId;
     }
 
     public BigDecimal getPackVoltage() {

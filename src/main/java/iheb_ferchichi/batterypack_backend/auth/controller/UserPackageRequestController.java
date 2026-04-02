@@ -1,9 +1,9 @@
 package iheb_ferchichi.batterypack_backend.auth.controller;
 
 import iheb_ferchichi.batterypack_backend.auth.dto.CreatePackageRequestDto;
-import iheb_ferchichi.batterypack_backend.auth.entity.PackageRequest;
+import iheb_ferchichi.batterypack_backend.auth.dto.PackageRequestResponse;
 import iheb_ferchichi.batterypack_backend.auth.service.PackageRequestService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,15 +19,15 @@ public class UserPackageRequestController {
     }
 
     @PostMapping
-    public PackageRequest createRequest(
-            @RequestParam Long userId,
+    public PackageRequestResponse createRequest(
+            Authentication authentication,
             @RequestBody CreatePackageRequestDto dto
     ) {
-        return packageRequestService.createRequest(userId, dto);
+        return packageRequestService.createRequest(authentication.getName(), dto);
     }
 
     @GetMapping
-    public List<PackageRequest> getMyRequests(@RequestParam Long userId) {
-        return packageRequestService.getUserRequests(userId);
+    public List<PackageRequestResponse> getMyRequests(Authentication authentication) {
+        return packageRequestService.getUserRequests(authentication.getName());
     }
 }

@@ -33,27 +33,28 @@ public class AlertRuleService {
 
     // UPDATED SIGNATURES (now accept prot + bq)
     public void evaluateLfp(LfpPackData pack, List<LfpCellData> cells, ProtDto prot, BqDto bq) {
-        checkTemperature("LFP", pack.getTemperature(), LFP_TEMP_THRESHOLD);
-        checkLfpImbalance(cells);
+        checkTemperature("LFP", pack.getBmsId(), pack.getTemperature(), LFP_TEMP_THRESHOLD);
+        checkLfpImbalance(pack.getBmsId(), cells);
 
-        evaluateProtFlags("LFP", prot);
-        evaluateBqSummary("LFP", bq);
+        evaluateProtFlags("LFP", pack.getBmsId(), prot);
+        evaluateBqSummary("LFP", pack.getBmsId(), bq);
     }
 
     public void evaluateSupercap(SupercapPackData pack, List<SupercapCellData> cells, ProtDto prot, BqDto bq) {
-        checkTemperature("SUPERCAP", pack.getTemperature(), SUPERCAP_TEMP_THRESHOLD);
-        checkSupercapImbalance(cells);
+        checkTemperature("SUPERCAP", pack.getBmsId(), pack.getTemperature(), SUPERCAP_TEMP_THRESHOLD);
+        checkSupercapImbalance(pack.getBmsId(), cells);
 
-        evaluateProtFlags("SUPERCAP", prot);
-        evaluateBqSummary("SUPERCAP", bq);
+        evaluateProtFlags("SUPERCAP", pack.getBmsId(), prot);
+        evaluateBqSummary("SUPERCAP", pack.getBmsId(), bq);
     }
 
-    private void checkTemperature(String packType, BigDecimal temperature, BigDecimal threshold) {
+    private void checkTemperature(String packType, String bmsId, BigDecimal temperature, BigDecimal threshold) {
         if (temperature == null) return;
 
         if (temperature.compareTo(threshold) > 0) {
             alertService.createIfNotActive(
                     packType,
+                    bmsId,
                     "BACKEND",
                     "HIGH_TEMPERATURE",
                     "SENSOR",
@@ -66,11 +67,11 @@ public class AlertRuleService {
                     "C"
             );
         } else {
-            alertService.resolveIfActive(packType, "HIGH_TEMPERATURE");
+            alertService.resolveIfActive(packType, bmsId, "HIGH_TEMPERATURE");
         }
     }
 
-    private void checkLfpImbalance(List<LfpCellData> cells) {
+    private void checkLfpImbalance(String bmsId, List<LfpCellData> cells) {
         if (cells == null || cells.isEmpty()) return;
 
         BigDecimal min = null;
@@ -90,6 +91,7 @@ public class AlertRuleService {
         if (imbalance.compareTo(LFP_IMBALANCE_THRESHOLD) > 0) {
             alertService.createIfNotActive(
                     "LFP",
+                    bmsId,
                     "BACKEND",
                     "HIGH_IMBALANCE",
                     "SENSOR",
@@ -102,11 +104,11 @@ public class AlertRuleService {
                     "V"
             );
         } else {
-            alertService.resolveIfActive("LFP", "HIGH_IMBALANCE");
+            alertService.resolveIfActive("LFP", bmsId, "HIGH_IMBALANCE");
         }
     }
 
-    private void checkSupercapImbalance(List<SupercapCellData> cells) {
+    private void checkSupercapImbalance(String bmsId, List<SupercapCellData> cells) {
         if (cells == null || cells.isEmpty()) return;
 
         BigDecimal min = null;
@@ -126,6 +128,7 @@ public class AlertRuleService {
         if (imbalance.compareTo(SUPERCAP_IMBALANCE_THRESHOLD) > 0) {
             alertService.createIfNotActive(
                     "SUPERCAP",
+                    bmsId,
                     "BACKEND",
                     "HIGH_IMBALANCE",
                     "SENSOR",
@@ -138,7 +141,7 @@ public class AlertRuleService {
                     "V"
             );
         } else {
-            alertService.resolveIfActive("SUPERCAP", "HIGH_IMBALANCE");
+            alertService.resolveIfActive("SUPERCAP", bmsId, "HIGH_IMBALANCE");
         }
     }
 
@@ -150,27 +153,28 @@ public class AlertRuleService {
         return x != null && x == 1;
     }
 
-    private void evaluateProtFlags(String packType, ProtDto prot) {
+    private void evaluateProtFlags(String packType, String bmsId, ProtDto prot) {
         if (prot == null) return;
 
         // Alerts (warnings)
-        flag(packType, "UV_ALERT",  on(prot.getUv_alert()),  "Cell undervoltage alert",        "BQ/STM reports UV alert",  "WARNING");
-        flag(packType, "OV_ALERT",  on(prot.getOv_alert()),  "Cell overvoltage alert",         "BQ/STM reports OV alert",  "WARNING");
-        flag(packType, "OCC_ALERT", on(prot.getOcc_alert()), "Overcurrent charge alert",       "BQ/STM reports OCC alert", "WARNING");
-        flag(packType, "OCD1_ALERT",on(prot.getOcd1_alert()),"Overcurrent discharge alert",    "BQ/STM reports OCD1 alert","WARNING");
-        flag(packType, "SCD_ALERT", on(prot.getScd_alert()), "Short circuit alert",            "BQ/STM reports SCD alert", "CRITICAL");
+        flag(packType, bmsId, "UV_ALERT",  on(prot.getUv_alert()),  "Cell undervoltage alert",        "BQ/STM reports UV alert",  "WARNING");
+        flag(packType, bmsId, "OV_ALERT",  on(prot.getOv_alert()),  "Cell overvoltage alert",         "BQ/STM reports OV alert",  "WARNING");
+        flag(packType, bmsId, "OCC_ALERT", on(prot.getOcc_alert()), "Overcurrent charge alert",       "BQ/STM reports OCC alert", "WARNING");
+        flag(packType, bmsId, "OCD1_ALERT",on(prot.getOcd1_alert()),"Overcurrent discharge alert",    "BQ/STM reports OCD1 alert","WARNING");
+        flag(packType, bmsId, "SCD_ALERT", on(prot.getScd_alert()), "Short circuit alert",            "BQ/STM reports SCD alert", "CRITICAL");
 
         // Faults (critical)
-        flag(packType, "UV_FAULT",  on(prot.getUv_fault()),  "Cell undervoltage fault",        "BQ/STM reports UV fault",  "CRITICAL");
-        flag(packType, "OV_FAULT",  on(prot.getOv_fault()),  "Cell overvoltage fault",         "BQ/STM reports OV fault",  "CRITICAL");
-        flag(packType, "OCD1_FAULT",on(prot.getOcd1_fault()),"Overcurrent discharge fault",    "BQ/STM reports OCD1 fault","CRITICAL");
-        flag(packType, "SCD_FAULT", on(prot.getScd_fault()), "Short circuit fault",            "BQ/STM reports SCD fault", "CRITICAL");
+        flag(packType, bmsId, "UV_FAULT",  on(prot.getUv_fault()),  "Cell undervoltage fault",        "BQ/STM reports UV fault",  "CRITICAL");
+        flag(packType, bmsId, "OV_FAULT",  on(prot.getOv_fault()),  "Cell overvoltage fault",         "BQ/STM reports OV fault",  "CRITICAL");
+        flag(packType, bmsId, "OCD1_FAULT",on(prot.getOcd1_fault()),"Overcurrent discharge fault",    "BQ/STM reports OCD1 fault","CRITICAL");
+        flag(packType, bmsId, "SCD_FAULT", on(prot.getScd_fault()), "Short circuit fault",            "BQ/STM reports SCD fault", "CRITICAL");
     }
 
-    private void flag(String packType, String code, boolean isOn, String title, String message, String severity) {
+    private void flag(String packType, String bmsId, String code, boolean isOn, String title, String message, String severity) {
         if (isOn) {
             alertService.createIfNotActive(
                     packType,
+                    bmsId,
                     "BQ",
                     code,
                     "PROTECTION",
@@ -183,7 +187,7 @@ public class AlertRuleService {
                     null
             );
         } else {
-            alertService.resolveIfActive(packType, code);
+            alertService.resolveIfActive(packType, bmsId, code);
         }
     }
 
@@ -191,19 +195,20 @@ public class AlertRuleService {
     // NEW: Summary alerts from BQ status values (until you decode bits precisely)
     // =========================
 
-    private void evaluateBqSummary(String packType, BqDto bq) {
+    private void evaluateBqSummary(String packType, String bmsId, BqDto bq) {
         if (bq == null) return;
 
-        summary(packType, "SAFETY_STATUS_A", bq.getSafety_status_a(), "Safety status A non-zero", "PROTECTION");
-        summary(packType, "SAFETY_STATUS_B", bq.getSafety_status_b(), "Safety status B non-zero", "PROTECTION");
-        summary(packType, "PF_STATUS_A",     bq.getPf_status_a(),     "PF status A non-zero",     "PERMANENT_FAIL");
-        summary(packType, "PF_STATUS_B",     bq.getPf_status_b(),     "PF status B non-zero",     "PERMANENT_FAIL");
+        summary(packType, bmsId, "SAFETY_STATUS_A", bq.getSafety_status_a(), "Safety status A non-zero", "PROTECTION");
+        summary(packType, bmsId, "SAFETY_STATUS_B", bq.getSafety_status_b(), "Safety status B non-zero", "PROTECTION");
+        summary(packType, bmsId, "PF_STATUS_A",     bq.getPf_status_a(),     "PF status A non-zero",     "PERMANENT_FAIL");
+        summary(packType, bmsId, "PF_STATUS_B",     bq.getPf_status_b(),     "PF status B non-zero",     "PERMANENT_FAIL");
     }
 
-    private void summary(String packType, String code, Integer value, String title, String category) {
+    private void summary(String packType, String bmsId, String code, Integer value, String title, String category) {
         if (value != null && value != 0) {
             alertService.createIfNotActive(
                     packType,
+                    bmsId,
                     "BQ",
                     code,
                     category,
@@ -216,7 +221,7 @@ public class AlertRuleService {
                     null
             );
         } else {
-            alertService.resolveIfActive(packType, code);
+            alertService.resolveIfActive(packType, bmsId, code);
         }
     }
 
@@ -234,6 +239,7 @@ public class AlertRuleService {
         if (status == null || status.getOnline() == null || !status.getOnline()) {
             alertService.createIfNotActive(
                     packType,
+                    status != null ? status.getBmsId() : null,
                     "BACKEND",
                     "PACK_OFFLINE",
                     "COMMUNICATION",
@@ -246,7 +252,7 @@ public class AlertRuleService {
                     null
             );
         } else {
-            alertService.resolveIfActive(packType, "PACK_OFFLINE");
+            alertService.resolveIfActive(packType, status.getBmsId(), "PACK_OFFLINE");
         }
     }
 }

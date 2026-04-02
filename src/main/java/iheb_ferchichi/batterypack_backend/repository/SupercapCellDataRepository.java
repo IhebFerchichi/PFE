@@ -2,6 +2,7 @@ package iheb_ferchichi.batterypack_backend.repository;
 
 import iheb_ferchichi.batterypack_backend.entity.SupercapCellData;
 import iheb_ferchichi.batterypack_backend.entity.SupercapPackData;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,7 +24,10 @@ public interface SupercapCellDataRepository extends JpaRepository<SupercapCellDa
             @Param("to") OffsetDateTime to
     );
 
+    List<SupercapCellData> findByPackBmsIdInOrderByTsDesc(List<String> bmsIds, Pageable pageable);
     List<SupercapCellData> findByPackOrderByCellIndexAsc(SupercapPackData pack);
     List<SupercapCellData> findByCellIndexAndTsBetweenOrderByTsAsc(Short cellIndex, OffsetDateTime from, OffsetDateTime to);
+    List<SupercapCellData> findByPackBmsIdAndCellIndexAndTsBetweenOrderByTsAsc(String bmsId, Short cellIndex, OffsetDateTime from, OffsetDateTime to);
+    List<SupercapCellData> findByPackBmsIdInAndCellIndexAndTsBetweenOrderByTsAsc(List<String> bmsIds, Short cellIndex, OffsetDateTime from, OffsetDateTime to);
 
 }

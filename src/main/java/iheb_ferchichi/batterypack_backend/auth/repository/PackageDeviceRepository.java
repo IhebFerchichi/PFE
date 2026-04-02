@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface PackageDeviceRepository extends JpaRepository<PackageDevice, Long> {
     List<PackageDevice> findByCustomerPackageOrderByIdAsc(CustomerPackage customerPackage);
     List<PackageDevice> findByCustomerPackageId(Long customerPackageId);
+    List<PackageDevice> findByCustomerPackageIdInOrderByCustomerPackageIdAscIdAsc(List<Long> customerPackageIds);
     Optional<PackageDevice> findByBmsId(String bmsId);
     Optional<PackageDevice> findByCustomerPackageAndPackType(CustomerPackage customerPackage, PackType packType);
 }

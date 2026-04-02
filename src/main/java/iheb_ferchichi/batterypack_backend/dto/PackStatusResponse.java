@@ -7,6 +7,7 @@ import java.time.OffsetDateTime;
 public class PackStatusResponse {
 
     private String packType;
+    private String bmsId;
     private OffsetDateTime ts;
     private BigDecimal packVoltage;
     private BigDecimal packCurrent;
@@ -31,6 +32,14 @@ public class PackStatusResponse {
 
     public void setPackType(String packType) {
         this.packType = packType;
+    }
+
+    public String getBmsId() {
+        return bmsId;
+    }
+
+    public void setBmsId(String bmsId) {
+        this.bmsId = bmsId;
     }
 
     public OffsetDateTime getTs() {

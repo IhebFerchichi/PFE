@@ -1,10 +1,10 @@
 package iheb_ferchichi.batterypack_backend.auth.controller;
 
+import iheb_ferchichi.batterypack_backend.auth.dto.PackageRequestResponse;
 import iheb_ferchichi.batterypack_backend.auth.dto.ReviewPackageRequestDto;
-import iheb_ferchichi.batterypack_backend.auth.entity.PackageRequest;
 import iheb_ferchichi.batterypack_backend.auth.service.PackageRequestService;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,26 +20,26 @@ public class AdminPackageRequestController {
     }
 
     @GetMapping("/pending")
-    public List<PackageRequest> getPendingRequests() {
+    public List<PackageRequestResponse> getPendingRequests() {
         return packageRequestService.getPendingRequests();
     }
 
     @PostMapping("/{requestId}/approve")
-    public PackageRequest approve(
+    public PackageRequestResponse approve(
             @PathVariable Long requestId,
-            @RequestParam Long adminId,
+            Authentication authentication,
             @RequestBody ReviewPackageRequestDto dto
     ) {
-        return packageRequestService.approveRequest(requestId, adminId, dto);
+        return packageRequestService.approveRequest(requestId, authentication.getName(), dto);
     }
 
     @PostMapping("/{requestId}/reject")
-    public PackageRequest reject(
+    public PackageRequestResponse reject(
             @PathVariable Long requestId,
-            @RequestParam Long adminId,
+            Authentication authentication,
             @RequestBody RejectRequestBody body
     ) {
-        return packageRequestService.rejectRequest(requestId, adminId, body.getAdminComment());
+        return packageRequestService.rejectRequest(requestId, authentication.getName(), body.getAdminComment());
     }
 
     @Data

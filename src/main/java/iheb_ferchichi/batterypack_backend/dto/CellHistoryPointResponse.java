@@ -7,6 +7,7 @@ import java.time.OffsetDateTime;
 public class CellHistoryPointResponse {
 
     private OffsetDateTime ts;
+    private String bmsId;
     private Integer cellIndex;
     private BigDecimal cellVoltage;
     private Boolean balancingOn;
@@ -20,6 +21,14 @@ public class CellHistoryPointResponse {
 
     public void setTs(OffsetDateTime ts) {
         this.ts = ts;
+    }
+
+    public String getBmsId() {
+        return bmsId;
+    }
+
+    public void setBmsId(String bmsId) {
+        this.bmsId = bmsId;
     }
 
     public Integer getCellIndex() {
