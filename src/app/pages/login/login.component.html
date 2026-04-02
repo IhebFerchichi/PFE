@@ -1,0 +1,28 @@
+<div class="login-shell">
+  <div class="login-card">
+    <div class="eyebrow">Battery Platform</div>
+    <h1>Sign in</h1>
+    <p class="intro">Use your backend account to access your assigned packs, alerts, and requests.</p>
+
+    <form class="login-form" (ngSubmit)="submit()">
+      <label>
+        <span>Email</span>
+        <input [(ngModel)]="email" name="email" type="email" autocomplete="username" required />
+      </label>
+
+      <label>
+        <span>Password</span>
+        <input [(ngModel)]="password" name="password" type="password" autocomplete="current-password" required />
+      </label>
+
+      <div class="error" *ngIf="error">{{ error }}</div>
+
+      <button type="submit" [disabled]="auth.loading()">Sign in</button>
+    </form>
+
+    <p class="switch-auth">
+      Don&apos;t have an account?
+      <a routerLink="/signup">Create one</a>
+    </p>
+  </div>
+</div>

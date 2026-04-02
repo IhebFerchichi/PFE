@@ -1,3 +1,92 @@
+.packPickerSection {
+  margin-bottom: 24px;
+}
+
+.sectionIntro {
+  margin-bottom: 14px;
+}
+
+.sectionIntro h2 {
+  margin: 0 0 6px;
+  color: var(--brand-blue-dark);
+  font-size: 24px;
+}
+
+.sectionIntro p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.packPickerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.packCard {
+  text-align: left;
+  border: 1px solid #d8e2f4;
+  border-radius: 18px;
+  padding: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.packCard:hover {
+  transform: translateY(-2px);
+  border-color: #a6bbe6;
+  box-shadow: 0 14px 28px rgba(47, 75, 147, 0.1);
+}
+
+.packCard.selected {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(47, 75, 147, 0.12);
+}
+
+.packCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.packCardTitle {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--brand-blue-dark);
+}
+
+.packCardCode {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.packCardStatus {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef3ff;
+  color: var(--brand-blue);
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.packCardMeta {
+  margin-top: 6px;
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.emptyState {
+  margin-bottom: 24px;
+}
+
 .kv {
   display: grid;
   gap: 10px;
@@ -23,6 +112,18 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+}
+
+.chartAction {
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+  text-align: left;
+}
+
+.chartAction app-line-chart {
+  display: block;
 }
 
 @media (max-width: 1100px) {
@@ -140,4 +241,45 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
+}
+
+.chartOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(18, 30, 61, 0.58);
+  backdrop-filter: blur(4px);
+}
+
+.chartModal {
+  width: min(1180px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f6f9ff 100%);
+  border: 1px solid #d9e4f7;
+  box-shadow: 0 26px 60px rgba(20, 33, 71, 0.26);
+  padding: 20px;
+}
+
+.chartModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.chartModalHeader h3 {
+  margin: 0 0 6px;
+  color: var(--brand-blue-dark);
+  font-size: 24px;
+}
+
+.chartModalHeader p {
+  margin: 0;
+  color: var(--text-muted);
 }

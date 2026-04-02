@@ -3,174 +3,324 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { Subscription, interval } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { LineChartComponent, LinePoint } from '../../shared/line-chart/line-chart.component';
+import { PackCatalogService } from '../../core/pack-catalog.service';
+import { AuthService } from '../../core/auth.service';
+
+type ExpandedChart = {
+  title: string;
+  yLabel: string;
+  points: LinePoint[];
+};
 
 @Component({
   selector: 'app-packs',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatTabsModule,
-    MatCardModule,
-    MatProgressSpinnerModule,
-    DatePipe,
-    LineChartComponent,
-    MatButtonToggleModule,
-    MatSelectModule,
-    MatFormFieldModule
-  ],
+  imports: [CommonModule, MatTabsModule, MatCardModule, MatProgressSpinnerModule, DatePipe, LineChartComponent],
   templateUrl: './packs.component.html',
   styleUrl: './packs.component.scss'
 })
 export class PacksComponent implements OnInit, OnDestroy {
   loading = true;
+  expandedChart: ExpandedChart | null = null;
 
-  lfpLatest: any | null = null;
-  scLatest: any | null = null;
-
-  lfpCells: any[] = [];
-  scCells: any[] = [];
-
-  lfpV: LinePoint[] = [];
-  lfpI: LinePoint[] = [];
-  lfpT: LinePoint[] = [];
-
-  scV: LinePoint[] = [];
-  scI: LinePoint[] = [];
-  scT: LinePoint[] = [];
+  allLfpLatest: any[] = [];
+  allScLatest: any[] = [];
+  allLfpCells: any[] = [];
+  allScCells: any[] = [];
+  allLfpHistory: any[] = [];
+  allScHistory: any[] = [];
 
   selectedLfpCell: number | null = null;
   selectedScCell: number | null = null;
+  lfpCellHistoryRows: any[] = [];
+  scCellHistoryRows: any[] = [];
 
-  lfpCellSeries: LinePoint[] = [];
-  scCellSeries: LinePoint[] = [];
+  latestLfpRow: any | null = null;
+  latestSupercapRow: any | null = null;
+  lfpCellRows: any[] = [];
+  scCellRows: any[] = [];
 
+  lfpVoltagePoints: LinePoint[] = [];
+  lfpCurrentPoints: LinePoint[] = [];
+  lfpTemperaturePoints: LinePoint[] = [];
+  supercapVoltagePoints: LinePoint[] = [];
+  supercapCurrentPoints: LinePoint[] = [];
+  supercapTemperaturePoints: LinePoint[] = [];
+  lfpVoltageFullPoints: LinePoint[] = [];
+  lfpCurrentFullPoints: LinePoint[] = [];
+  lfpTemperatureFullPoints: LinePoint[] = [];
+  supercapVoltageFullPoints: LinePoint[] = [];
+  supercapCurrentFullPoints: LinePoint[] = [];
+  supercapTemperatureFullPoints: LinePoint[] = [];
+  lfpCellPoints: LinePoint[] = [];
+  scCellPoints: LinePoint[] = [];
+
+  private readonly compactPointCount = 10;
   private readonly windowMinutes = 60;
   private watchSub?: Subscription;
+  private initialized = false;
 
-  private lastLfpTs: string | null = null;
-  private lastScTs: string | null = null;
-
-  constructor(private api: ApiService) {}
+  constructor(
+    private readonly api: ApiService,
+    readonly packCatalog: PackCatalogService,
+    readonly auth: AuthService
+  ) {}
 
   ngOnInit(): void {
-    this.initialLoad();
-
-    this.watchSub = interval(3000).subscribe(() => {
-      this.checkForNewLfp();
-      this.checkForNewSupercap();
-    });
+    this.packCatalog.loadPacks();
+    this.reloadTelemetry(true);
+    this.watchSub = interval(3000).subscribe(() => this.reloadTelemetry(false));
   }
 
   ngOnDestroy(): void {
     this.watchSub?.unsubscribe();
   }
 
-  private initialLoad(): void {
-    this.loading = true;
-
-    this.api.getLfpLatest(1).subscribe({
-      next: (x) => {
-        this.lfpLatest = Array.isArray(x) ? (x[0] ?? null) : x;
-        this.lastLfpTs = this.lfpLatest?.ts ?? null;
-      },
-      error: (e) => console.error('getLfpLatest failed', e)
-    });
-
-    this.api.getSupercapLatest(1).subscribe({
-      next: (x) => {
-        this.scLatest = Array.isArray(x) ? (x[0] ?? null) : x;
-        this.lastScTs = this.scLatest?.ts ?? null;
-      },
-      error: (e) => console.error('getSupercapLatest failed', e)
-    });
-
-    this.loadLatestCells();
-    this.reloadCharts();
+  get selectedPack() {
+    return this.packCatalog.selectedPack();
   }
 
-  private checkForNewLfp(): void {
-    this.api.getLfpLatest(1).subscribe({
-      next: (x) => {
-        const latest = Array.isArray(x) ? (x[0] ?? null) : x;
-        const newTs = latest?.ts ?? null;
-
-        if (newTs && newTs !== this.lastLfpTs) {
-          this.lastLfpTs = newTs;
-          this.lfpLatest = latest;
-
-          this.refreshLfpData();
-        }
-      },
-      error: (e) => console.error('checkForNewLfp failed', e)
-    });
+  choosePack(packageCode: string): void {
+    this.packCatalog.setSelectedPack(packageCode);
+    this.clearLfpCell();
+    this.clearScCell();
+    this.expandedChart = null;
+    this.refreshDerivedState();
+    this.reloadTelemetry(false);
   }
 
-  private checkForNewSupercap(): void {
-    this.api.getSupercapLatest(1).subscribe({
-      next: (x) => {
-        const latest = Array.isArray(x) ? (x[0] ?? null) : x;
-        const newTs = latest?.ts ?? null;
+  openExpandedChart(title: string, yLabel: string, points: LinePoint[]): void {
+    if (!points.length) {
+      return;
+    }
 
-        if (newTs && newTs !== this.lastScTs) {
-          this.lastScTs = newTs;
-          this.scLatest = latest;
+    this.expandedChart = {
+      title,
+      yLabel,
+      points: [...points]
+    };
+  }
 
-          this.refreshSupercapData();
-        }
+  closeExpandedChart(): void {
+    this.expandedChart = null;
+  }
+
+  selectLfpCell(i: number): void {
+    const bmsId = this.selectedPack?.lfpBmsId ?? null;
+
+    if (!bmsId) {
+      this.clearLfpCell();
+      return;
+    }
+
+    this.selectedLfpCell = i;
+    const { from, to } = this.rangeIsoLastMinutes(this.windowMinutes);
+
+    this.api.getLfpCellHistory(i, from, to, bmsId).subscribe({
+      next: (rows) => {
+        this.lfpCellHistoryRows = Array.isArray(rows) ? rows : [];
+        this.refreshDerivedState();
       },
-      error: (e) => console.error('checkForNewSupercap failed', e)
+      error: (e) => {
+        console.error('getLfpCellHistory failed', e);
+        this.lfpCellHistoryRows = [];
+        this.refreshDerivedState();
+      }
     });
   }
 
-  private refreshLfpData(): void {
+  selectScCell(i: number): void {
+    const bmsId = this.selectedPack?.supercapBmsId ?? null;
+
+    if (!bmsId) {
+      this.clearScCell();
+      return;
+    }
+
+    this.selectedScCell = i;
+    const { from, to } = this.rangeIsoLastMinutes(this.windowMinutes);
+
+    this.api.getSupercapCellHistory(i, from, to, bmsId).subscribe({
+      next: (rows) => {
+        this.scCellHistoryRows = Array.isArray(rows) ? rows : [];
+        this.refreshDerivedState();
+      },
+      error: (e) => {
+        console.error('getSupercapCellHistory failed', e);
+        this.scCellHistoryRows = [];
+        this.refreshDerivedState();
+      }
+    });
+  }
+
+  clearLfpCell(): void {
+    this.selectedLfpCell = null;
+    this.lfpCellHistoryRows = [];
+    this.lfpCellPoints = [];
+  }
+
+  clearScCell(): void {
+    this.selectedScCell = null;
+    this.scCellHistoryRows = [];
+    this.scCellPoints = [];
+  }
+
+  byIndex(a: any, b: any): number {
+    return (a?.cellIndex ?? a?.cell_index ?? 0) - (b?.cellIndex ?? b?.cell_index ?? 0);
+  }
+
+  latestValue(row: any, camel: string, snake: string): any {
+    return row?.[camel] ?? row?.[snake];
+  }
+
+  cellIndexOf(c: any): number {
+    return c?.cellIndex ?? c?.cell_index ?? 0;
+  }
+
+  cellVoltageOf(c: any): any {
+    return c?.cellVoltage ?? c?.cell_voltage ?? '-';
+  }
+
+  cellBalancingOf(c: any): boolean {
+    return Boolean(c?.balancingOn ?? c?.balancing_on);
+  }
+
+  packDisplayName(pack: { label: string | null; packageCode: string }): string {
+    return pack.label?.trim() || pack.packageCode;
+  }
+
+  packSubtitle(pack: { packageCode: string }): string {
+    return `Code ${pack.packageCode}`;
+  }
+
+  private reloadTelemetry(showLoader = false): void {
+    if (showLoader && !this.initialized) {
+      this.loading = true;
+    }
+
+    this.loadLfpLatest();
+    this.loadSupercapLatest();
     this.loadLfpCells();
+    this.loadSupercapCells();
     this.loadLfpHistory();
+    this.loadSupercapHistory();
 
     if (this.selectedLfpCell !== null) {
       this.selectLfpCell(this.selectedLfpCell);
     }
-  }
-
-  private refreshSupercapData(): void {
-    this.loadSupercapCells();
-    this.loadSupercapHistory();
 
     if (this.selectedScCell !== null) {
       this.selectScCell(this.selectedScCell);
     }
+
+    this.initialized = true;
   }
 
-  private loadLatestCells(): void {
-    this.loadLfpCells();
-    this.loadSupercapCells();
+  private loadLfpLatest(): void {
+    this.api.getLfpLatest(200).subscribe({
+      next: (rows) => {
+        this.allLfpLatest = Array.isArray(rows) ? rows : [];
+        this.refreshDerivedState();
+        this.loading = false;
+      },
+      error: (e) => {
+        console.error('getLfpLatest failed', e);
+        this.allLfpLatest = [];
+        this.refreshDerivedState();
+        this.loading = false;
+      }
+    });
+  }
+
+  private loadSupercapLatest(): void {
+    this.api.getSupercapLatest(200).subscribe({
+      next: (rows) => {
+        this.allScLatest = Array.isArray(rows) ? rows : [];
+        this.refreshDerivedState();
+      },
+      error: (e) => {
+        console.error('getSupercapLatest failed', e);
+        this.allScLatest = [];
+        this.refreshDerivedState();
+      }
+    });
   }
 
   private loadLfpCells(): void {
-    this.api.getLfpCellsLatest(16).subscribe({
-      next: (x) => {
-        this.lfpCells = Array.isArray(x) ? x : [];
+    this.api.getLfpCellsLatest(500).subscribe({
+      next: (rows) => {
+        this.allLfpCells = Array.isArray(rows) ? rows : [];
+        this.refreshDerivedState();
       },
       error: (e) => {
         console.error('getLfpCellsLatest failed', e);
-        this.lfpCells = [];
+        this.allLfpCells = [];
+        this.refreshDerivedState();
       }
     });
   }
 
   private loadSupercapCells(): void {
-    this.api.getSupercapCellsLatest(16).subscribe({
-      next: (x) => {
-        this.scCells = Array.isArray(x) ? x : [];
+    this.api.getSupercapCellsLatest(500).subscribe({
+      next: (rows) => {
+        this.allScCells = Array.isArray(rows) ? rows : [];
+        this.refreshDerivedState();
       },
       error: (e) => {
         console.error('getSupercapCellsLatest failed', e);
-        this.scCells = [];
+        this.allScCells = [];
+        this.refreshDerivedState();
+      }
+    });
+  }
+
+  private loadLfpHistory(): void {
+    const bmsId = this.selectedPack?.lfpBmsId ?? null;
+
+    if (!bmsId) {
+      this.allLfpHistory = [];
+      this.refreshDerivedState();
+      return;
+    }
+
+    const { from, to } = this.rangeIsoLastMinutes(this.windowMinutes);
+
+    this.api.getLfpHistoryByBms(bmsId, from, to).subscribe({
+      next: (rows) => {
+        this.allLfpHistory = Array.isArray(rows) ? rows : [];
+        this.refreshDerivedState();
+      },
+      error: (e) => {
+        console.error('getLfpHistory failed', e);
+        this.allLfpHistory = [];
+        this.refreshDerivedState();
+      }
+    });
+  }
+
+  private loadSupercapHistory(): void {
+    const bmsId = this.selectedPack?.supercapBmsId ?? null;
+
+    if (!bmsId) {
+      this.allScHistory = [];
+      this.refreshDerivedState();
+      return;
+    }
+
+    const { from, to } = this.rangeIsoLastMinutes(this.windowMinutes);
+
+    this.api.getSupercapHistoryByBms(bmsId, from, to).subscribe({
+      next: (rows) => {
+        this.allScHistory = Array.isArray(rows) ? rows : [];
+        this.refreshDerivedState();
+      },
+      error: (e) => {
+        console.error('getSupercapHistory failed', e);
+        this.allScHistory = [];
+        this.refreshDerivedState();
       }
     });
   }
@@ -179,10 +329,6 @@ export class PacksComponent implements OnInit, OnDestroy {
     const to = new Date();
     const from = new Date(to.getTime() - mins * 60_000);
     return { from: from.toISOString(), to: to.toISOString() };
-  }
-
-  private pick(row: any, camel: string, snake: string): any {
-    return row?.[camel] ?? row?.[snake];
   }
 
   private toSeries(rows: any[], camelField: string, snakeField: string): LinePoint[] {
@@ -194,7 +340,7 @@ export class PacksComponent implements OnInit, OnDestroy {
           minute: '2-digit',
           second: '2-digit'
         }),
-        y: Number(this.pick(x, camelField, snakeField))
+        y: Number(x?.[camelField] ?? x?.[snakeField])
       }))
       .filter((p) => !Number.isNaN(p.y));
   }
@@ -213,112 +359,86 @@ export class PacksComponent implements OnInit, OnDestroy {
       .filter((p) => !Number.isNaN(p.y));
   }
 
-  reloadCharts(): void {
-    this.loadLfpHistory();
-    this.loadSupercapHistory();
+  private findLatestForBms(rows: any[], bmsId: string | null): any | null {
+    if (!bmsId) {
+      return null;
+    }
+
+    return rows.find((row) => this.rowBmsId(row) === bmsId) ?? null;
   }
 
-  private loadLfpHistory(): void {
-    const { from, to } = this.rangeIsoLastMinutes(this.windowMinutes);
+  private latestCellsForBms(rows: any[], bmsId: string | null): any[] {
+    if (!bmsId) {
+      return [];
+    }
 
-    this.api.getLfpHistory(from, to).subscribe({
-      next: (rows) => {
-        const r = Array.isArray(rows) ? rows : [];
-        this.lfpV = this.toSeries(r, 'packVoltage', 'pack_voltage');
-        this.lfpI = this.toSeries(r, 'packCurrent', 'pack_current');
-        this.lfpT = this.toSeries(r, 'temperature', 'temperature');
-        this.loading = false;
-      },
-      error: (e) => {
-        console.error('getLfpHistory failed', e);
-        this.lfpV = [];
-        this.lfpI = [];
-        this.lfpT = [];
-        this.loading = false;
+    const seen = new Set<number>();
+    const filtered: any[] = [];
+
+    for (const row of rows) {
+      if (this.rowBmsId(row) !== bmsId) {
+        continue;
       }
-    });
-  }
 
-  private loadSupercapHistory(): void {
-    const { from, to } = this.rangeIsoLastMinutes(this.windowMinutes);
-
-    this.api.getSupercapHistory(from, to).subscribe({
-      next: (rows) => {
-        const r = Array.isArray(rows) ? rows : [];
-        this.scV = this.toSeries(r, 'packVoltage', 'pack_voltage');
-        this.scI = this.toSeries(r, 'packCurrent', 'pack_current');
-        this.scT = this.toSeries(r, 'temperature', 'temperature');
-        this.loading = false;
-      },
-      error: (e) => {
-        console.error('getSupercapHistory failed', e);
-        this.scV = [];
-        this.scI = [];
-        this.scT = [];
-        this.loading = false;
+      const index = this.cellIndexOf(row);
+      if (seen.has(index)) {
+        continue;
       }
-    });
+
+      seen.add(index);
+      filtered.push(row);
+    }
+
+    return filtered.sort((a, b) => this.byIndex(a, b));
   }
 
-  selectLfpCell(i: number): void {
-    this.selectedLfpCell = i;
-    const { from, to } = this.rangeIsoLastMinutes(this.windowMinutes);
+  private filterRowsByBms(rows: any[], bmsId: string | null): any[] {
+    if (!bmsId) {
+      return [];
+    }
 
-    this.api.getLfpCellHistory(i, from, to).subscribe({
-      next: (rows) => {
-        const r = Array.isArray(rows) ? rows : [];
-        this.lfpCellSeries = this.toCellSeries(r);
-      },
-      error: (e) => {
-        console.error('getLfpCellHistory failed', e);
-        this.lfpCellSeries = [];
-      }
-    });
+    return rows.filter((row) => this.rowBmsId(row) === bmsId);
   }
 
-  selectScCell(i: number): void {
-    this.selectedScCell = i;
-    const { from, to } = this.rangeIsoLastMinutes(this.windowMinutes);
-
-    this.api.getSupercapCellHistory(i, from, to).subscribe({
-      next: (rows) => {
-        const r = Array.isArray(rows) ? rows : [];
-        this.scCellSeries = this.toCellSeries(r);
-      },
-      error: (e) => {
-        console.error('getSupercapCellHistory failed', e);
-        this.scCellSeries = [];
-      }
-    });
+  private rowBmsId(row: any): string | null {
+    return row?.bmsId ?? row?.bms_id ?? row?.pack?.bmsId ?? row?.pack?.bms_id ?? null;
   }
 
-  clearLfpCell(): void {
-    this.selectedLfpCell = null;
-    this.lfpCellSeries = [];
+  private refreshDerivedState(): void {
+    const lfpBmsId = this.selectedPack?.lfpBmsId ?? null;
+    const supercapBmsId = this.selectedPack?.supercapBmsId ?? null;
+
+    this.latestLfpRow = this.findLatestForBms(this.allLfpLatest, lfpBmsId);
+    this.latestSupercapRow = this.findLatestForBms(this.allScLatest, supercapBmsId);
+    this.lfpCellRows = this.latestCellsForBms(this.allLfpCells, lfpBmsId);
+    this.scCellRows = this.latestCellsForBms(this.allScCells, supercapBmsId);
+
+    const lfpHistoryRows = this.filterRowsByBms(this.allLfpHistory, lfpBmsId);
+    const supercapHistoryRows = this.filterRowsByBms(this.allScHistory, supercapBmsId);
+
+    this.lfpVoltageFullPoints = this.toSeries(lfpHistoryRows, 'packVoltage', 'pack_voltage');
+    this.lfpCurrentFullPoints = this.toSeries(lfpHistoryRows, 'packCurrent', 'pack_current');
+    this.lfpTemperatureFullPoints = this.toSeries(lfpHistoryRows, 'temperature', 'temperature');
+    this.supercapVoltageFullPoints = this.toSeries(supercapHistoryRows, 'packVoltage', 'pack_voltage');
+    this.supercapCurrentFullPoints = this.toSeries(supercapHistoryRows, 'packCurrent', 'pack_current');
+    this.supercapTemperatureFullPoints = this.toSeries(supercapHistoryRows, 'temperature', 'temperature');
+
+    this.lfpVoltagePoints = this.compactSeries(this.lfpVoltageFullPoints);
+    this.lfpCurrentPoints = this.compactSeries(this.lfpCurrentFullPoints);
+    this.lfpTemperaturePoints = this.compactSeries(this.lfpTemperatureFullPoints);
+    this.supercapVoltagePoints = this.compactSeries(this.supercapVoltageFullPoints);
+    this.supercapCurrentPoints = this.compactSeries(this.supercapCurrentFullPoints);
+    this.supercapTemperaturePoints = this.compactSeries(this.supercapTemperatureFullPoints);
+
+    this.lfpCellPoints = this.toCellSeries(this.filterRowsByBms(this.lfpCellHistoryRows, lfpBmsId));
+    this.scCellPoints = this.toCellSeries(this.filterRowsByBms(this.scCellHistoryRows, supercapBmsId));
   }
 
-  clearScCell(): void {
-    this.selectedScCell = null;
-    this.scCellSeries = [];
-  }
+  private compactSeries(points: LinePoint[]): LinePoint[] {
+    if (points.length <= this.compactPointCount) {
+      return [...points];
+    }
 
-  byIndex(a: any, b: any): number {
-    return (a?.cellIndex ?? a?.cell_index ?? 0) - (b?.cellIndex ?? b?.cell_index ?? 0);
-  }
-
-  latestValue(row: any, camel: string, snake: string): any {
-    return this.pick(row, camel, snake);
-  }
-
-  cellIndexOf(c: any): number {
-    return c?.cellIndex ?? c?.cell_index ?? 0;
-  }
-
-  cellVoltageOf(c: any): any {
-    return c?.cellVoltage ?? c?.cell_voltage ?? '-';
-  }
-
-  cellBalancingOf(c: any): boolean {
-    return Boolean(c?.balancingOn ?? c?.balancing_on);
+    return points.slice(-this.compactPointCount);
   }
 }

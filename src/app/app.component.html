@@ -1,4 +1,4 @@
-<nz-layout class="app-shell">
+<nz-layout class="app-shell" *ngIf="showShell; else authPage">
   <nz-header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
@@ -8,17 +8,31 @@
         </div>
       </div>
 
-        <ul nz-menu nzMode="horizontal" class="top-menu">
-          <li nz-menu-item routerLink="/dashboard" routerLinkActive="ant-menu-item-selected" [routerLinkActiveOptions]="{ exact: true }">
-          Dashboard
-        </li>
+        <ul nz-menu nzMode="horizontal" class="top-menu" *ngIf="auth.user() as user">
+          <li *ngIf="user.role === 'ADMIN'" nz-menu-item routerLink="/dashboard" routerLinkActive="ant-menu-item-selected" [routerLinkActiveOptions]="{ exact: true }">
+            Dashboard
+          </li>
         <li nz-menu-item routerLink="/packs" routerLinkActive="ant-menu-item-selected">
           Packs
         </li>
         <li nz-menu-item routerLink="/alerts" routerLinkActive="ant-menu-item-selected">
           Alerts
         </li>
+        <li nz-menu-item *ngIf="user.role === 'USER'" routerLink="/requests" routerLinkActive="ant-menu-item-selected">
+          Requests
+        </li>
+        <li nz-menu-item *ngIf="user.role === 'ADMIN'" routerLink="/admin/requests" routerLinkActive="ant-menu-item-selected">
+          Package Requests
+        </li>
       </ul>
+
+      <div class="topbar-actions" *ngIf="auth.user() as user">
+        <div class="user-badge">
+          <strong>{{ user.fullName }}</strong>
+          <span>{{ user.role }}</span>
+        </div>
+        <button mat-button type="button" class="logout-btn" (click)="logout()">Logout</button>
+      </div>
     </div>
   </nz-header>
 
@@ -28,3 +42,7 @@
     </div>
   </nz-content>
 </nz-layout>
+
+<ng-template #authPage>
+  <router-outlet></router-outlet>
+</ng-template>

@@ -1,29 +1,72 @@
 <h1 class="page-title">Packs</h1>
 
+<section class="packPickerSection" *ngIf="packCatalog.packs().length">
+  <div class="sectionIntro">
+    <h2>Select Pack</h2>
+    <p>Choose the logical package first, then inspect its LFP and supercap telemetry.</p>
+  </div>
+
+  <div class="packPickerGrid">
+    <button
+      type="button"
+      class="packCard"
+      *ngFor="let pack of packCatalog.packs()"
+      [class.selected]="selectedPack && selectedPack.packageCode === pack.packageCode"
+      (click)="choosePack(pack.packageCode)">
+      <div class="packCardTop">
+        <div>
+          <div class="packCardTitle">{{ packDisplayName(pack) }}</div>
+          <div class="packCardCode">{{ packSubtitle(pack) }}</div>
+        </div>
+        <div class="packCardStatus">{{ pack.status }}</div>
+      </div>
+
+      <div class="packCardMeta" *ngIf="auth.isAdmin()">Owner: {{ pack.ownerFullName }} ({{ pack.ownerEmail }})</div>
+      <div class="packCardMeta">LFP BMS: {{ pack.lfpBmsId || 'Not assigned' }}</div>
+      <div class="packCardMeta">Supercap BMS: {{ pack.supercapBmsId || 'Not assigned' }}</div>
+    </button>
+  </div>
+</section>
+
+<mat-card class="emptyState" *ngIf="!loading && !selectedPack">
+  <mat-card-title>No Pack Assigned Yet</mat-card-title>
+  <mat-card-content>
+    <p>No approved customer package is available for this account yet.</p>
+  </mat-card-content>
+</mat-card>
+
 <div *ngIf="loading" class="loading-row">
   <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
-  <span>Loading pack history...</span>
+  <span>Loading recent telemetry history...</span>
 </div>
 
-<mat-tab-group>
+<mat-tab-group *ngIf="selectedPack">
   <mat-tab label="LFP">
     <div class="grid">
       <mat-card class="section">
-        <mat-card-title>Latest Pack</mat-card-title>
+        <mat-card-title>Latest LFP Data</mat-card-title>
         <mat-card-content class="kv">
-          <div><b>V</b>: {{ latestValue(lfpLatest, 'packVoltage', 'pack_voltage') ?? '-' }}</div>
-          <div><b>I</b>: {{ latestValue(lfpLatest, 'packCurrent', 'pack_current') ?? '-' }}</div>
-          <div><b>T</b>: {{ latestValue(lfpLatest, 'temperature', 'temperature') ?? '-' }}</div>
-          <div><b>TS</b>: {{ lfpLatest?.ts ? (lfpLatest.ts | date:"dd MMM yyyy 'at' HH:mm:ss") : '-' }}</div>
+          <div><b>Pack</b>: {{ packDisplayName(selectedPack) }}</div>
+          <div><b>BMS</b>: {{ selectedPack.lfpBmsId || 'Not assigned' }}</div>
+          <div><b>V</b>: {{ latestValue(latestLfpRow, 'packVoltage', 'pack_voltage') ?? '-' }}</div>
+          <div><b>I</b>: {{ latestValue(latestLfpRow, 'packCurrent', 'pack_current') ?? '-' }}</div>
+          <div><b>T</b>: {{ latestValue(latestLfpRow, 'temperature', 'temperature') ?? '-' }}</div>
+          <div><b>TS</b>: {{ latestLfpRow?.ts ? (latestLfpRow?.ts | date:"dd MMM yyyy 'at' HH:mm:ss") : '-' }}</div>
         </mat-card-content>
       </mat-card>
 
       <mat-card class="section">
-        <mat-card-title>LFP Trends (last hour)</mat-card-title>
+        <mat-card-title>LFP Trends (latest 10 samples)</mat-card-title>
         <mat-card-content class="chartGrid">
-          <app-line-chart title="Voltage" [points]="lfpV" yLabel="V" [height]="260"></app-line-chart>
-          <app-line-chart title="Current" [points]="lfpI" yLabel="A" [height]="260"></app-line-chart>
-          <app-line-chart title="Temperature" [points]="lfpT" yLabel="°C" [height]="260"></app-line-chart>
+          <button type="button" class="chartAction" (click)="openExpandedChart('LFP Voltage History', 'V', lfpVoltageFullPoints)">
+            <app-line-chart title="Voltage" [points]="lfpVoltagePoints" yLabel="V" [height]="260"></app-line-chart>
+          </button>
+          <button type="button" class="chartAction" (click)="openExpandedChart('LFP Current History', 'A', lfpCurrentFullPoints)">
+            <app-line-chart title="Current" [points]="lfpCurrentPoints" yLabel="A" [height]="260"></app-line-chart>
+          </button>
+          <button type="button" class="chartAction" (click)="openExpandedChart('LFP Temperature History', 'deg C', lfpTemperatureFullPoints)">
+            <app-line-chart title="Temperature" [points]="lfpTemperaturePoints" yLabel="deg C" [height]="260"></app-line-chart>
+          </button>
         </mat-card-content>
       </mat-card>
 
@@ -34,7 +77,7 @@
             <button
               type="button"
               class="cellBtn"
-              *ngFor="let c of lfpCells.sort(byIndex)"
+              *ngFor="let c of lfpCellRows"
               (click)="selectLfpCell(cellIndexOf(c))"
               [class.selected]="selectedLfpCell === cellIndexOf(c)">
               <div class="idx">#{{ cellIndexOf(c) }}</div>
@@ -50,10 +93,10 @@
       <mat-card class="section" *ngIf="selectedLfpCell !== null">
         <mat-card-title>
           LFP Cell {{ selectedLfpCell }} Voltage (last hour)
-          <button type="button" class="closeBtn" (click)="clearLfpCell()">✕</button>
+          <button type="button" class="closeBtn" (click)="clearLfpCell()">x</button>
         </mat-card-title>
         <mat-card-content>
-          <app-line-chart [points]="lfpCellSeries" yLabel="V" [height]="260"></app-line-chart>
+          <app-line-chart [points]="lfpCellPoints" yLabel="V" [height]="320" [scrollable]="true" [pointWidth]="64"></app-line-chart>
         </mat-card-content>
       </mat-card>
     </div>
@@ -62,21 +105,29 @@
   <mat-tab label="Supercap">
     <div class="grid">
       <mat-card class="section">
-        <mat-card-title>Latest Pack</mat-card-title>
+        <mat-card-title>Latest Supercap Data</mat-card-title>
         <mat-card-content class="kv">
-          <div><b>V</b>: {{ latestValue(scLatest, 'packVoltage', 'pack_voltage') ?? '-' }}</div>
-          <div><b>I</b>: {{ latestValue(scLatest, 'packCurrent', 'pack_current') ?? '-' }}</div>
-          <div><b>T</b>: {{ latestValue(scLatest, 'temperature', 'temperature') ?? '-' }}</div>
-          <div><b>TS</b>: {{ scLatest?.ts ? (scLatest.ts | date:"dd MMM yyyy 'at' HH:mm:ss") : '-' }}</div>
+          <div><b>Pack</b>: {{ packDisplayName(selectedPack) }}</div>
+          <div><b>BMS</b>: {{ selectedPack.supercapBmsId || 'Not assigned' }}</div>
+          <div><b>V</b>: {{ latestValue(latestSupercapRow, 'packVoltage', 'pack_voltage') ?? '-' }}</div>
+          <div><b>I</b>: {{ latestValue(latestSupercapRow, 'packCurrent', 'pack_current') ?? '-' }}</div>
+          <div><b>T</b>: {{ latestValue(latestSupercapRow, 'temperature', 'temperature') ?? '-' }}</div>
+          <div><b>TS</b>: {{ latestSupercapRow?.ts ? (latestSupercapRow?.ts | date:"dd MMM yyyy 'at' HH:mm:ss") : '-' }}</div>
         </mat-card-content>
       </mat-card>
 
       <mat-card class="section">
-        <mat-card-title>Supercap Trends (last hour)</mat-card-title>
+        <mat-card-title>Supercap Trends (latest 10 samples)</mat-card-title>
         <mat-card-content class="chartGrid">
-          <app-line-chart title="Voltage" [points]="scV" yLabel="V" [height]="260"></app-line-chart>
-          <app-line-chart title="Current" [points]="scI" yLabel="A" [height]="260"></app-line-chart>
-          <app-line-chart title="Temperature" [points]="scT" yLabel="°C" [height]="260"></app-line-chart>
+          <button type="button" class="chartAction" (click)="openExpandedChart('Supercap Voltage History', 'V', supercapVoltageFullPoints)">
+            <app-line-chart title="Voltage" [points]="supercapVoltagePoints" yLabel="V" [height]="260"></app-line-chart>
+          </button>
+          <button type="button" class="chartAction" (click)="openExpandedChart('Supercap Current History', 'A', supercapCurrentFullPoints)">
+            <app-line-chart title="Current" [points]="supercapCurrentPoints" yLabel="A" [height]="260"></app-line-chart>
+          </button>
+          <button type="button" class="chartAction" (click)="openExpandedChart('Supercap Temperature History', 'deg C', supercapTemperatureFullPoints)">
+            <app-line-chart title="Temperature" [points]="supercapTemperaturePoints" yLabel="deg C" [height]="260"></app-line-chart>
+          </button>
         </mat-card-content>
       </mat-card>
 
@@ -87,7 +138,7 @@
             <button
               type="button"
               class="cellBtn"
-              *ngFor="let c of scCells.sort(byIndex)"
+              *ngFor="let c of scCellRows"
               (click)="selectScCell(cellIndexOf(c))"
               [class.selected]="selectedScCell === cellIndexOf(c)">
               <div class="idx">#{{ cellIndexOf(c) }}</div>
@@ -103,12 +154,32 @@
       <mat-card class="section" *ngIf="selectedScCell !== null">
         <mat-card-title>
           Supercap Cell {{ selectedScCell }} Voltage (last hour)
-          <button type="button" class="closeBtn" (click)="clearScCell()">✕</button>
+          <button type="button" class="closeBtn" (click)="clearScCell()">x</button>
         </mat-card-title>
         <mat-card-content>
-          <app-line-chart [points]="scCellSeries" yLabel="V" [height]="260"></app-line-chart>
+          <app-line-chart [points]="scCellPoints" yLabel="V" [height]="320" [scrollable]="true" [pointWidth]="64"></app-line-chart>
         </mat-card-content>
       </mat-card>
     </div>
   </mat-tab>
 </mat-tab-group>
+
+<div class="chartOverlay" *ngIf="expandedChart" (click)="closeExpandedChart()">
+  <div class="chartModal" (click)="$event.stopPropagation()">
+    <div class="chartModalHeader">
+      <div>
+        <h3>{{ expandedChart.title }}</h3>
+        <p>Scroll left and right to inspect older telemetry points.</p>
+      </div>
+      <button type="button" class="closeBtn" (click)="closeExpandedChart()">x</button>
+    </div>
+
+    <app-line-chart
+      [title]="expandedChart.title"
+      [points]="expandedChart.points"
+      [yLabel]="expandedChart.yLabel"
+      [height]="440"
+      [scrollable]="true"
+      [pointWidth]="72"></app-line-chart>
+  </div>
+</div>

@@ -1,0 +1,100 @@
+.login-shell {
+  min-height: calc(100vh - 56px);
+  display: grid;
+  place-items: center;
+  padding: 32px 18px;
+}
+
+.login-card {
+  width: min(460px, 100%);
+  border: 1px solid var(--border-light);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 20px 44px rgba(35, 57, 116, 0.12);
+  padding: 30px 28px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: var(--brand-blue);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 16px 0 8px;
+  font-size: 34px;
+  color: var(--brand-blue-dark);
+}
+
+.intro {
+  margin: 0 0 22px;
+  color: var(--text-muted);
+}
+
+.login-form {
+  display: grid;
+  gap: 16px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--brand-blue-dark);
+}
+
+input {
+  width: 100%;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font: inherit;
+  color: var(--text-main);
+  background: #fbfcff;
+}
+
+input:focus {
+  outline: 2px solid rgba(47, 75, 147, 0.18);
+  border-color: var(--brand-blue);
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font: inherit;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-blue-dark));
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.error {
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  font-weight: 600;
+}
+
+.switch-auth {
+  margin: 18px 0 0;
+  color: var(--text-muted);
+}
+
+.switch-auth a {
+  color: var(--brand-blue);
+  font-weight: 700;
+  text-decoration: none;
+}

@@ -10,8 +10,10 @@
     </div>
   </div>
 
-  <div class="chart-body">
-    <canvas #canvas></canvas>
+  <div class="chart-body" [class.scrollable]="scrollable">
+    <div class="chart-scroll" [style.width.px]="chartWidth">
+      <canvas #canvas></canvas>
+    </div>
 
     <div class="empty-state" *ngIf="!points || points.length === 0">
       <div class="empty-title">No data available</div>

@@ -1,26 +1,68 @@
 <h1 class="page-title">Dashboard</h1>
 
+<section class="packPickerSection" *ngIf="packCatalog.packs().length">
+  <div class="sectionIntro">
+    <h2>Selected Pack Context</h2>
+    <p>Choose which approved package the dashboard summary should represent.</p>
+  </div>
+
+  <div class="packPickerGrid">
+    <button
+      type="button"
+      class="packCard"
+      *ngFor="let pack of packCatalog.packs()"
+      [class.selected]="selectedPack && selectedPack.packageCode === pack.packageCode"
+      (click)="choosePack(pack.packageCode)">
+      <div class="packCardTop">
+        <div>
+          <div class="packCardTitle">{{ packDisplayName(pack) }}</div>
+          <div class="packCardCode">{{ pack.packageCode }}</div>
+        </div>
+        <div class="packCardStatus">{{ pack.status }}</div>
+      </div>
+
+      <div class="packCardMeta">Owner: {{ pack.ownerFullName }} ({{ pack.ownerEmail }})</div>
+      <div class="packCardMeta">LFP BMS: {{ pack.lfpBmsId || 'Not assigned' }}</div>
+      <div class="packCardMeta">Supercap BMS: {{ pack.supercapBmsId || 'Not assigned' }}</div>
+    </button>
+  </div>
+</section>
+
 <div *ngIf="loading" style="display:flex;gap:12px;align-items:center;">
   <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
   <span>Loading...</span>
 </div>
 
-<div class="grid grid-3" *ngIf="!loading">
+<mat-card class="emptyState" *ngIf="!loading && !selectedPack">
+  <mat-card-title>No Approved Packages Yet</mat-card-title>
+  <mat-card-content>
+    <p>There is no customer package available to summarize on the dashboard yet.</p>
+  </mat-card-content>
+</mat-card>
 
+<div class="selectedPackBanner" *ngIf="selectedPack">
+  <div class="selectedPackTitle">{{ packDisplayName(selectedPack) }}</div>
+  <div class="selectedPackMeta">Package code: {{ selectedPack.packageCode }}</div>
+  <div class="selectedPackMeta">LFP BMS: {{ selectedPack.lfpBmsId || 'Not assigned' }}</div>
+  <div class="selectedPackMeta">Supercap BMS: {{ selectedPack.supercapBmsId || 'Not assigned' }}</div>
+</div>
+
+<div class="grid grid-3" *ngIf="!loading && selectedPack">
   <mat-card>
     <mat-card-title>LFP Pack</mat-card-title>
     <mat-card-content>
       <mat-chip-set>
-        <mat-chip [ngClass]="isOnline(lfpLatest?.ts) ? 'ok' : 'bad'">
-          {{ isOnline(lfpLatest?.ts) ? 'ONLINE' : 'OFFLINE' }}
+        <mat-chip [ngClass]="isOnline(latestLfp()?.ts) ? 'ok' : 'bad'">
+          {{ isOnline(latestLfp()?.ts) ? 'ONLINE' : 'OFFLINE' }}
         </mat-chip>
       </mat-chip-set>
 
       <div class="kv">
-        <div><b>V</b>: {{ lfpLatest?.packVoltage ?? '-' }}</div>
-        <div><b>I</b>: {{ lfpLatest?.packCurrent ?? '-' }}</div>
-        <div><b>T</b>: {{ lfpLatest?.temperature ?? '-' }}</div>
-        <div><b>TS</b>: {{ lfpLatest?.ts | date:"dd MMM yyyy 'at' HH:mm:ss" }}</div>
+        <div><b>BMS</b>: {{ selectedPack.lfpBmsId || 'Not assigned' }}</div>
+        <div><b>V</b>: {{ latestLfp()?.packVoltage ?? '-' }}</div>
+        <div><b>I</b>: {{ latestLfp()?.packCurrent ?? '-' }}</div>
+        <div><b>T</b>: {{ latestLfp()?.temperature ?? '-' }}</div>
+        <div><b>TS</b>: {{ latestLfp()?.ts | date:"dd MMM yyyy 'at' HH:mm:ss" }}</div>
       </div>
     </mat-card-content>
   </mat-card>
@@ -29,26 +71,28 @@
     <mat-card-title>Supercap Pack</mat-card-title>
     <mat-card-content>
       <mat-chip-set>
-        <mat-chip [ngClass]="isOnline(scLatest?.ts) ? 'ok' : 'bad'">
-          {{ isOnline(scLatest?.ts) ? 'ONLINE' : 'OFFLINE' }}
+        <mat-chip [ngClass]="isOnline(latestSupercap()?.ts) ? 'ok' : 'bad'">
+          {{ isOnline(latestSupercap()?.ts) ? 'ONLINE' : 'OFFLINE' }}
         </mat-chip>
       </mat-chip-set>
 
       <div class="kv">
-        <div><b>V</b>: {{ scLatest?.packVoltage ?? '-' }}</div>
-        <div><b>I</b>: {{ scLatest?.packCurrent ?? '-' }}</div>
-        <div><b>T</b>: {{ scLatest?.temperature ?? '-' }}</div>
-        <div><b>TS</b>: {{ scLatest?.ts | date:"dd MMM yyyy 'at' HH:mm:ss" }}</div>
+        <div><b>BMS</b>: {{ selectedPack.supercapBmsId || 'Not assigned' }}</div>
+        <div><b>V</b>: {{ latestSupercap()?.packVoltage ?? '-' }}</div>
+        <div><b>I</b>: {{ latestSupercap()?.packCurrent ?? '-' }}</div>
+        <div><b>T</b>: {{ latestSupercap()?.temperature ?? '-' }}</div>
+        <div><b>TS</b>: {{ latestSupercap()?.ts | date:"dd MMM yyyy 'at' HH:mm:ss" }}</div>
       </div>
     </mat-card-content>
   </mat-card>
 
-  <mat-card>
+  <mat-card class="alertsCard">
     <mat-card-title>Active Alerts</mat-card-title>
-    <mat-card-content>
-      <div class="big">{{ activeAlerts.length }}</div>
-      <div class="small">alerts currently active</div>
+    <mat-card-content class="alertsContent">
+      <div class="alertsCountWrap">
+        <div class="big">{{ selectedPackAlertCount() }}</div>
+      </div>
+      <div class="small">active alerts for the selected pack</div>
     </mat-card-content>
   </mat-card>
-
 </div>

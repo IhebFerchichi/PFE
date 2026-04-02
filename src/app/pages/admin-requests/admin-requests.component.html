@@ -1,0 +1,46 @@
+<h1 class="page-title">Admin Requests</h1>
+
+<div class="feedback" *ngIf="feedback">{{ feedback }}</div>
+
+<div *ngIf="loading" class="empty-state">Loading pending package requests...</div>
+
+<div class="admin-grid" *ngIf="!loading && requests.length > 0">
+  <article class="request-card" *ngFor="let request of requests">
+    <div class="request-header">
+      <div>
+        <strong>{{ request.requestedLabel || 'Unnamed request' }}</strong>
+        <div class="meta">User: {{ request.user?.fullName || request.user?.email || 'Unknown user' }}</div>
+      </div>
+      <span class="status">Pending</span>
+    </div>
+
+    <p>{{ request.reason || 'No reason provided.' }}</p>
+    <div class="meta">Requested: {{ request.requestedAt | date:"dd MMM yyyy 'at' HH:mm:ss" }}</div>
+
+    <div class="fields">
+      <label>
+        <span>LFP BMS ID</span>
+        <input [(ngModel)]="request.lfpBmsId" type="text" />
+      </label>
+
+      <label>
+        <span>Supercap BMS ID</span>
+        <input [(ngModel)]="request.supercapBmsId" type="text" />
+      </label>
+
+      <label class="full">
+        <span>Admin comment</span>
+        <textarea [(ngModel)]="request.adminComment" rows="3"></textarea>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="approve" (click)="approve(request)" [disabled]="request.saving">Approve</button>
+      <button type="button" class="reject" (click)="reject(request)" [disabled]="request.saving">Reject</button>
+    </div>
+  </article>
+</div>
+
+<div *ngIf="!loading && requests.length === 0" class="empty-state">
+  No pending package requests right now.
+</div>

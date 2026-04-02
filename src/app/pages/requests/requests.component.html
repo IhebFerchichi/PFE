@@ -1,0 +1,52 @@
+<h1 class="page-title">Package Requests</h1>
+
+<div class="request-layout">
+  <section class="section-shell">
+    <h3>Request a Pack</h3>
+    <div class="request-form">
+      <label>
+        <span>Requested label</span>
+        <input [(ngModel)]="requestedLabel" name="requestedLabel" type="text" placeholder="Example: Plant A Battery Pack" />
+      </label>
+
+      <label>
+        <span>Reason</span>
+        <textarea [(ngModel)]="reason" name="reason" rows="5" placeholder="Tell the admin why you need this package."></textarea>
+      </label>
+
+      <div class="feedback" *ngIf="feedback">{{ feedback }}</div>
+
+      <button type="button" (click)="submit()" [disabled]="saving">
+        {{ saving ? 'Submitting...' : 'Submit Request' }}
+      </button>
+    </div>
+  </section>
+
+  <section class="section-shell">
+    <h3>My Requests</h3>
+
+    <div *ngIf="loading" class="empty-state">Loading requests...</div>
+
+    <div class="request-list" *ngIf="!loading && requests.length > 0">
+      <article class="request-item" *ngFor="let request of requests">
+        <div class="request-head">
+          <strong>{{ request.requestedLabel || 'Unnamed request' }}</strong>
+          <span class="status" [class.approved]="request.status === 'APPROVED'" [class.rejected]="request.status === 'REJECTED'">
+            {{ request.status }}
+          </span>
+        </div>
+        <p>{{ request.reason || 'No reason provided.' }}</p>
+        <div class="meta">
+          Requested: {{ request.requestedAt | date:"dd MMM yyyy 'at' HH:mm:ss" }}
+        </div>
+        <div class="meta" *ngIf="request.adminComment">
+          Admin comment: {{ request.adminComment }}
+        </div>
+      </article>
+    </div>
+
+    <div *ngIf="!loading && requests.length === 0" class="empty-state">
+      You have not submitted any package requests yet.
+    </div>
+  </section>
+</div>

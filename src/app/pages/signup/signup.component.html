@@ -1,0 +1,38 @@
+<div class="login-shell">
+  <div class="login-card">
+    <div class="eyebrow">Battery Platform</div>
+    <h1>Create account</h1>
+    <p class="intro">Create a user account to request a pack and monitor the packs assigned to you.</p>
+
+    <form class="login-form" (ngSubmit)="submit()">
+      <label>
+        <span>Full name</span>
+        <input [(ngModel)]="fullName" name="fullName" type="text" autocomplete="name" required />
+      </label>
+
+      <label>
+        <span>Email</span>
+        <input [(ngModel)]="email" name="email" type="email" autocomplete="email" required />
+      </label>
+
+      <label>
+        <span>Password</span>
+        <input [(ngModel)]="password" name="password" type="password" autocomplete="new-password" required />
+      </label>
+
+      <label>
+        <span>Confirm password</span>
+        <input [(ngModel)]="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required />
+      </label>
+
+      <div class="error" *ngIf="error">{{ error }}</div>
+
+      <button type="submit" [disabled]="auth.loading()">Create account</button>
+    </form>
+
+    <p class="switch-auth">
+      Already have an account?
+      <a routerLink="/login">Sign in</a>
+    </p>
+  </div>
+</div>
