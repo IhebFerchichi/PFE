@@ -11,7 +11,9 @@ import iheb_ferchichi.batterypack_backend.auth.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class TelemetryAccessService {
@@ -53,6 +55,30 @@ public class TelemetryAccessService {
         }
 
         return bmsIds;
+    }
+
+    public List<String> getConfiguredBmsIds(PackType packType) {
+        Set<String> bmsIds = new LinkedHashSet<>();
+
+        for (PackageDevice device : packageDeviceRepository.findByPackTypeAndEnabledTrueOrderByBmsIdAsc(packType)) {
+            if (device.getBmsId() != null && !device.getBmsId().isBlank()) {
+                bmsIds.add(device.getBmsId());
+            }
+        }
+
+        return List.copyOf(bmsIds);
+    }
+
+    public boolean canAccessBms(String email, PackType packType, String bmsId) {
+        if (bmsId == null || bmsId.isBlank()) {
+            return false;
+        }
+
+        if (isAdmin(email)) {
+            return true;
+        }
+
+        return getAccessibleBmsIds(email, packType).contains(bmsId);
     }
 
     public User getUserByEmail(String email) {

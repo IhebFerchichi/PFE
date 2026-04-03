@@ -13,6 +13,7 @@ public interface LfpPackDataRepository extends JpaRepository<LfpPackData, Long> 
     @Query("select p from LfpPackData p order by p.ts desc")
     List<LfpPackData> findLatest(Pageable pageable);
     Optional<LfpPackData> findTopByOrderByTsDesc();
+    Optional<LfpPackData> findTopByBmsIdOrderByTsDesc(String bmsId);
     Optional<LfpPackData> findTopByBmsIdInOrderByTsDesc(List<String> bmsIds);
     List<LfpPackData> findByBmsIdInOrderByTsDesc(List<String> bmsIds, Pageable pageable);
 

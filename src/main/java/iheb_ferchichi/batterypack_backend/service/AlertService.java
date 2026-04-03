@@ -93,6 +93,33 @@ public class AlertService {
         }
     }
 
+    public Alert acknowledgeAlert(String userEmail, Long alertId) {
+        Alert alert = findAccessibleAlert(userEmail, alertId);
+
+        if (Boolean.TRUE.equals(alert.getAcknowledged())) {
+            return alert;
+        }
+
+        alert.setAcknowledged(true);
+        alert.setAcknowledgedBy(userEmail);
+        alert.setAcknowledgedAt(OffsetDateTime.now());
+        alert.setUpdatedAt(OffsetDateTime.now());
+        return alertRepository.save(alert);
+    }
+
+    public Alert resolveAlert(String userEmail, Long alertId) {
+        Alert alert = findAccessibleAlert(userEmail, alertId);
+
+        if (!Boolean.TRUE.equals(alert.getActive())) {
+            return alert;
+        }
+
+        alert.setActive(false);
+        alert.setResolvedAt(OffsetDateTime.now());
+        alert.setUpdatedAt(OffsetDateTime.now());
+        return alertRepository.save(alert);
+    }
+
     public List<Alert> getActiveAlerts(String userEmail) {
         if (telemetryAccessService.isAdmin(userEmail)) {
             return alertRepository.findByActiveTrueOrderByCreatedAtDesc();
@@ -137,5 +164,26 @@ public class AlertService {
         bmsIds.addAll(telemetryAccessService.getAccessibleBmsIds(userEmail, PackType.LFP));
         bmsIds.addAll(telemetryAccessService.getAccessibleBmsIds(userEmail, PackType.SUPERCAP));
         return bmsIds;
+    }
+
+    private Alert findAccessibleAlert(String userEmail, Long alertId) {
+        Alert alert = alertRepository.findById(alertId)
+                .orElseThrow(() -> new IllegalArgumentException("Alert not found"));
+
+        if (telemetryAccessService.isAdmin(userEmail)) {
+            return alert;
+        }
+
+        String bmsId = alert.getBmsId();
+        if (bmsId == null || bmsId.isBlank()) {
+            throw new IllegalArgumentException("You do not have access to this alert");
+        }
+
+        List<String> accessible = getAccessibleAlertBmsIds(userEmail);
+        if (!accessible.contains(bmsId)) {
+            throw new IllegalArgumentException("You do not have access to this alert");
+        }
+
+        return alert;
     }
 }

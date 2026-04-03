@@ -3,19 +3,21 @@ package iheb_ferchichi.batterypack_backend.auth.controller;
 import iheb_ferchichi.batterypack_backend.auth.dto.LoginRequest;
 import iheb_ferchichi.batterypack_backend.auth.dto.LoginResponse;
 import iheb_ferchichi.batterypack_backend.auth.dto.MeResponse;
+import iheb_ferchichi.batterypack_backend.auth.dto.AuthMessageResponse;
+import iheb_ferchichi.batterypack_backend.auth.dto.ForgotPasswordRequest;
 import iheb_ferchichi.batterypack_backend.auth.dto.RegisterRequest;
-import iheb_ferchichi.batterypack_backend.auth.entity.Role;
+import iheb_ferchichi.batterypack_backend.auth.dto.ResendVerificationRequest;
+import iheb_ferchichi.batterypack_backend.auth.dto.ResetPasswordRequest;
+import iheb_ferchichi.batterypack_backend.auth.dto.VerifyEmailRequest;
 import iheb_ferchichi.batterypack_backend.auth.entity.User;
 import iheb_ferchichi.batterypack_backend.auth.repository.UserRepository;
+import iheb_ferchichi.batterypack_backend.auth.service.AuthAccountService;
 import iheb_ferchichi.batterypack_backend.auth.service.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.OffsetDateTime;
 
 @RestController
 @RequestMapping("/auth")
@@ -24,31 +26,37 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthAccountService authAccountService;
 
     public AuthController(
             AuthenticationManager authenticationManager,
             UserRepository userRepository,
             JwtService jwtService,
-            PasswordEncoder passwordEncoder
+            AuthAccountService authAccountService
     ) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
-        this.passwordEncoder = passwordEncoder;
+        this.authAccountService = authAccountService;
     }
 
     @PostMapping("/login")
     public LoginResponse login(@RequestBody LoginRequest request) {
+        String email = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : "";
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Login failed. Please check your email and password."));
+
+        if (!Boolean.TRUE.equals(user.getEmailVerified())) {
+            throw new IllegalArgumentException("Please verify your email before signing in.");
+        }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
+                        email,
                         request.getPassword()
                 )
         );
-
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String token = jwtService.generateToken(user);
 
@@ -57,54 +65,34 @@ public class AuthController {
                 user.getId(),
                 user.getEmail(),
                 user.getFullName(),
-                user.getRole().name()
+                user.getRole().name(),
+                user.getEmailVerified()
         );
     }
 
     @PostMapping("/register")
-    public LoginResponse register(@RequestBody RegisterRequest request) {
-        String fullName = request.getFullName() != null ? request.getFullName().trim() : "";
-        String email = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : "";
-        String password = request.getPassword() != null ? request.getPassword() : "";
+    public AuthMessageResponse register(@RequestBody RegisterRequest request) {
+        return authAccountService.register(request);
+    }
 
-        if (fullName.isBlank()) {
-            throw new IllegalArgumentException("Full name is required");
-        }
+    @PostMapping("/verify-email")
+    public AuthMessageResponse verifyEmail(@RequestBody VerifyEmailRequest request) {
+        return authAccountService.verifyEmail(request.getToken());
+    }
 
-        if (email.isBlank()) {
-            throw new IllegalArgumentException("Email is required");
-        }
+    @PostMapping("/resend-verification")
+    public AuthMessageResponse resendVerification(@RequestBody ResendVerificationRequest request) {
+        return authAccountService.resendVerification(request.getEmail());
+    }
 
-        if (password.isBlank()) {
-            throw new IllegalArgumentException("Password is required");
-        }
+    @PostMapping("/forgot-password")
+    public AuthMessageResponse forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        return authAccountService.requestPasswordReset(request.getEmail());
+    }
 
-        if (password.length() < 6) {
-            throw new IllegalArgumentException("Password must be at least 6 characters");
-        }
-
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new IllegalArgumentException("An account with this email already exists");
-        }
-
-        User user = new User();
-        user.setFullName(fullName);
-        user.setEmail(email);
-        user.setPasswordHash(passwordEncoder.encode(password));
-        user.setRole(Role.USER);
-        user.setEnabled(true);
-        user.setCreatedAt(OffsetDateTime.now());
-
-        User savedUser = userRepository.save(user);
-        String token = jwtService.generateToken(savedUser);
-
-        return new LoginResponse(
-                token,
-                savedUser.getId(),
-                savedUser.getEmail(),
-                savedUser.getFullName(),
-                savedUser.getRole().name()
-        );
+    @PostMapping("/reset-password")
+    public AuthMessageResponse resetPassword(@RequestBody ResetPasswordRequest request) {
+        return authAccountService.resetPassword(request);
     }
 
     @GetMapping("/me")
@@ -118,7 +106,8 @@ public class AuthController {
                 user.getId(),
                 user.getEmail(),
                 user.getFullName(),
-                user.getRole().name()
+                user.getRole().name(),
+                user.getEmailVerified()
         );
     }
 }

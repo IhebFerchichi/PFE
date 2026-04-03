@@ -28,6 +28,14 @@ public class PackageDevice {
     @Column(nullable = false)
     private Boolean enabled = true;
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public CustomerPackage getCustomerPackage() {
         return customerPackage;
     }

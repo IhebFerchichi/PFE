@@ -40,6 +40,13 @@ public class PackageRequest {
     @Column(name = "admin_comment", columnDefinition = "text")
     private String adminComment;
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public User getUser() {
         return user;

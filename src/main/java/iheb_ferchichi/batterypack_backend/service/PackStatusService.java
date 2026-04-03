@@ -47,6 +47,16 @@ public class PackStatusService {
         return opt.map(this::toLfpStatus).orElse(null);
     }
 
+    public PackStatusResponse getLfpStatusByBmsId(String bmsId) {
+        if (bmsId == null || bmsId.isBlank()) {
+            return null;
+        }
+
+        return lfpPackRepo.findTopByBmsIdOrderByTsDesc(bmsId)
+                .map(this::toLfpStatus)
+                .orElse(null);
+    }
+
     public PackStatusResponse getLfpStatus(String userEmail) {
         Optional<LfpPackData> opt = telemetryAccessService.isAdmin(userEmail)
                 ? lfpPackRepo.findTopByOrderByTsDesc()
@@ -61,6 +71,16 @@ public class PackStatusService {
     public PackStatusResponse getSupercapStatus() {
         Optional<SupercapPackData> opt = supercapPackRepo.findTopByOrderByTsDesc();
         return opt.map(this::toSupercapStatus).orElse(null);
+    }
+
+    public PackStatusResponse getSupercapStatusByBmsId(String bmsId) {
+        if (bmsId == null || bmsId.isBlank()) {
+            return null;
+        }
+
+        return supercapPackRepo.findTopByBmsIdOrderByTsDesc(bmsId)
+                .map(this::toSupercapStatus)
+                .orElse(null);
     }
 
     public PackStatusResponse getSupercapStatus(String userEmail) {

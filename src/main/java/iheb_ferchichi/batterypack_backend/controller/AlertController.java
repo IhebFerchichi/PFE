@@ -6,6 +6,7 @@ import iheb_ferchichi.batterypack_backend.service.AlertService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -32,5 +33,15 @@ public class AlertController {
     @GetMapping("/alerts/active/{packType}")
     public List<Alert> getActiveAlertsByPack(Authentication authentication, @PathVariable String packType) {
         return alertService.getActiveAlertsByPack(authentication.getName(), packType.toUpperCase());
+    }
+
+    @PostMapping("/alerts/{alertId}/acknowledge")
+    public Alert acknowledgeAlert(Authentication authentication, @PathVariable Long alertId) {
+        return alertService.acknowledgeAlert(authentication.getName(), alertId);
+    }
+
+    @PostMapping("/alerts/{alertId}/resolve")
+    public Alert resolveAlert(Authentication authentication, @PathVariable Long alertId) {
+        return alertService.resolveAlert(authentication.getName(), alertId);
     }
 }

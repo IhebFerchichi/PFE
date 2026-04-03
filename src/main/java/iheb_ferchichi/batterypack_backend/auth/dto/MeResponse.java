@@ -5,15 +5,17 @@ public class MeResponse {
     private String email;
     private String fullName;
     private String role;
+    private Boolean emailVerified;
 
     public MeResponse() {
     }
 
-    public MeResponse(Long userId, String email, String fullName, String role) {
+    public MeResponse(Long userId, String email, String fullName, String role, Boolean emailVerified) {
         this.userId = userId;
         this.email = email;
         this.fullName = fullName;
         this.role = role;
+        this.emailVerified = emailVerified;
     }
 
     public Long getUserId() {
@@ -46,5 +48,13 @@ public class MeResponse {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public Boolean getEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(Boolean emailVerified) {
+        this.emailVerified = emailVerified;
     }
 }

@@ -35,6 +35,14 @@ public class CustomerPackage {
     @JoinColumn(name = "created_by")
     private User createdBy;
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getPackageCode() {
         return packageCode;
     }

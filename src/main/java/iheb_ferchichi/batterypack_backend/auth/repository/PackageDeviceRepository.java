@@ -12,6 +12,7 @@ public interface PackageDeviceRepository extends JpaRepository<PackageDevice, Lo
     List<PackageDevice> findByCustomerPackageOrderByIdAsc(CustomerPackage customerPackage);
     List<PackageDevice> findByCustomerPackageId(Long customerPackageId);
     List<PackageDevice> findByCustomerPackageIdInOrderByCustomerPackageIdAscIdAsc(List<Long> customerPackageIds);
+    List<PackageDevice> findByPackTypeAndEnabledTrueOrderByBmsIdAsc(PackType packType);
     Optional<PackageDevice> findByBmsId(String bmsId);
     Optional<PackageDevice> findByCustomerPackageAndPackType(CustomerPackage customerPackage, PackType packType);
 }

@@ -10,6 +10,7 @@ import java.util.Optional;
 
 public interface SupercapPackDataRepository extends JpaRepository<SupercapPackData, Long> {
     Optional<SupercapPackData> findTopByOrderByTsDesc();
+    Optional<SupercapPackData> findTopByBmsIdOrderByTsDesc(String bmsId);
     Optional<SupercapPackData> findTopByBmsIdInOrderByTsDesc(List<String> bmsIds);
     List<SupercapPackData> findByBmsIdInOrderByTsDesc(List<String> bmsIds, Pageable pageable);
     List<SupercapPackData> findByTsBetweenOrderByTsAsc(OffsetDateTime from, OffsetDateTime to);

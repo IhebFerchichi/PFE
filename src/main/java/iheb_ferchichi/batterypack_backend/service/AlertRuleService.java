@@ -24,11 +24,14 @@ public class AlertRuleService {
 
     private final AlertService alertService;
     private final PackStatusService packStatusService;
+    private final TelemetryAccessService telemetryAccessService;
 
     public AlertRuleService(AlertService alertService,
-                            PackStatusService packStatusService) {
+                            PackStatusService packStatusService,
+                            TelemetryAccessService telemetryAccessService) {
         this.alertService = alertService;
         this.packStatusService = packStatusService;
+        this.telemetryAccessService = telemetryAccessService;
     }
 
     // UPDATED SIGNATURES (now accept prot + bq)
@@ -231,15 +234,20 @@ public class AlertRuleService {
 
     @Scheduled(fixedRate = 10000)
     public void checkOfflinePacks() {
-        checkOfflinePack("LFP", packStatusService.getLfpStatus());
-        checkOfflinePack("SUPERCAP", packStatusService.getSupercapStatus());
+        for (String bmsId : telemetryAccessService.getConfiguredBmsIds(iheb_ferchichi.batterypack_backend.auth.entity.PackType.LFP)) {
+            checkOfflinePack("LFP", bmsId, packStatusService.getLfpStatusByBmsId(bmsId));
+        }
+
+        for (String bmsId : telemetryAccessService.getConfiguredBmsIds(iheb_ferchichi.batterypack_backend.auth.entity.PackType.SUPERCAP)) {
+            checkOfflinePack("SUPERCAP", bmsId, packStatusService.getSupercapStatusByBmsId(bmsId));
+        }
     }
 
-    private void checkOfflinePack(String packType, PackStatusResponse status) {
+    private void checkOfflinePack(String packType, String bmsId, PackStatusResponse status) {
         if (status == null || status.getOnline() == null || !status.getOnline()) {
             alertService.createIfNotActive(
                     packType,
-                    status != null ? status.getBmsId() : null,
+                    bmsId,
                     "BACKEND",
                     "PACK_OFFLINE",
                     "COMMUNICATION",
@@ -252,7 +260,7 @@ public class AlertRuleService {
                     null
             );
         } else {
-            alertService.resolveIfActive(packType, status.getBmsId(), "PACK_OFFLINE");
+            alertService.resolveIfActive(packType, bmsId, "PACK_OFFLINE");
         }
     }
 }
