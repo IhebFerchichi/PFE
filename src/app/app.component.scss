@@ -113,6 +113,109 @@
   padding: 10px 0 0;
 }
 
+.alert-toast-stack {
+  position: fixed;
+  top: 98px;
+  right: 22px;
+  z-index: 1400;
+  display: grid;
+  gap: 12px;
+  width: min(360px, calc(100vw - 28px));
+}
+
+.alert-toast {
+  border-radius: 20px;
+  padding: 16px 16px 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 250, 255, 0.98) 100%);
+  border: 1px solid #d7e2f6;
+  box-shadow: 0 20px 42px rgba(24, 38, 81, 0.2);
+  backdrop-filter: blur(10px);
+  border-left: 6px solid #d7e2f6;
+}
+
+.alert-toast-warning {
+  border-left-color: #d6a500;
+  box-shadow: 0 20px 42px rgba(163, 123, 0, 0.18);
+}
+
+.alert-toast-critical {
+  border-left-color: #d9363e;
+  box-shadow: 0 20px 42px rgba(173, 33, 40, 0.2);
+}
+
+.alert-toast-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.alert-toast-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  background: rgba(47, 75, 147, 0.08);
+  color: var(--brand-blue-dark);
+}
+
+.alert-toast-badge-warning {
+  background: rgba(214, 165, 0, 0.14);
+  color: #8a6500;
+}
+
+.alert-toast-badge-critical {
+  background: rgba(217, 54, 62, 0.12);
+  color: #b1282f;
+}
+
+.alert-toast-close {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: #edf2fb;
+  color: var(--brand-blue-dark);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.alert-toast-title {
+  margin-top: 10px;
+  color: var(--brand-blue-dark);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.alert-toast-meta {
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.alert-toast-text {
+  margin-top: 10px;
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.alert-toast-pack {
+  margin-top: 8px;
+  color: var(--brand-blue-dark);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.alert-toast-owner {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 @media (max-width: 900px) {
   .topbar-inner {
     flex-direction: column;
@@ -141,5 +244,12 @@
   .top-menu .ant-menu-item {
     font-size: 16px;
     padding-inline: 12px !important;
+  }
+
+  .alert-toast-stack {
+    top: 150px;
+    right: 14px;
+    left: 14px;
+    width: auto;
   }
 }

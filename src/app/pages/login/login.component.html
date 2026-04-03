@@ -15,10 +15,15 @@
         <input [(ngModel)]="password" name="password" type="password" autocomplete="current-password" required />
       </label>
 
+      <div class="success" *ngIf="info">{{ info }}</div>
       <div class="error" *ngIf="error">{{ error }}</div>
 
       <button type="submit" [disabled]="auth.loading()">Sign in</button>
     </form>
+
+    <p class="switch-auth">
+      <a routerLink="/forgot-password">Forgot your password?</a>
+    </p>
 
     <p class="switch-auth">
       Don&apos;t have an account?

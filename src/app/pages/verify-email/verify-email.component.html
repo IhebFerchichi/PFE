@@ -1,0 +1,34 @@
+<div class="login-shell">
+  <div class="login-card">
+    <div class="eyebrow">Battery Platform</div>
+    <h1>Verify email</h1>
+    <p class="intro">Verify your email before accessing the platform or using password recovery.</p>
+
+    <div class="success" *ngIf="info">{{ info }}</div>
+    <div class="error" *ngIf="error">{{ error }}</div>
+
+    <form class="login-form" (ngSubmit)="submitVerification()">
+      <label>
+        <span>Email</span>
+        <input [(ngModel)]="email" name="email" type="email" autocomplete="email" />
+      </label>
+
+      <label>
+        <span>Verification token</span>
+        <input [(ngModel)]="token" name="token" type="text" autocomplete="one-time-code" />
+      </label>
+
+      <button type="submit" [disabled]="auth.loading()">Verify email</button>
+    </form>
+
+    <div class="action-row">
+      <button type="button" class="secondary-btn" (click)="resend()" [disabled]="auth.loading()">Resend verification email</button>
+      <button type="button" class="secondary-btn" *ngIf="verified" (click)="goToLogin()">Go to sign in</button>
+    </div>
+
+    <p class="switch-auth">
+      Already verified?
+      <a routerLink="/login">Sign in</a>
+    </p>
+  </div>
+</div>

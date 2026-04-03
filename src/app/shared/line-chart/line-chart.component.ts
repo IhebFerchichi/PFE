@@ -13,7 +13,63 @@ import { Chart, ChartConfiguration, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-export type LinePoint = { t: string; y: number };
+export type LinePoint = { t: string; y: number; ts: number };
+export type ChartMarker = { id: string; at: number; label: string };
+
+const markerLinesPlugin = {
+  id: 'markerLines',
+  afterDatasetsDraw(chart: Chart, _args: unknown, pluginOptions: any) {
+    const markers = (pluginOptions?.markers ?? []) as ChartMarker[];
+    const points = (pluginOptions?.points ?? []) as LinePoint[];
+    const datasetPoints = chart.getDatasetMeta(0)?.data ?? [];
+
+    if (!markers.length || !points.length || !datasetPoints.length || !chart.chartArea) {
+      return;
+    }
+
+    const { ctx, chartArea } = chart;
+    ctx.save();
+
+    for (const marker of markers) {
+      let closestIndex = 0;
+      let smallestDelta = Number.POSITIVE_INFINITY;
+
+      for (let i = 0; i < points.length; i++) {
+        const delta = Math.abs(points[i].ts - marker.at);
+        if (delta < smallestDelta) {
+          smallestDelta = delta;
+          closestIndex = i;
+        }
+      }
+
+      const element: any = datasetPoints[closestIndex];
+      const x = element?.x;
+      if (typeof x !== 'number') {
+        continue;
+      }
+
+      ctx.strokeStyle = '#e02424';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, chartArea.top);
+      ctx.lineTo(x, chartArea.bottom);
+      ctx.stroke();
+
+      ctx.font = '12px sans-serif';
+      const labelWidth = ctx.measureText(marker.label).width + 12;
+      const labelX = Math.min(Math.max(x - labelWidth / 2, chartArea.left + 4), chartArea.right - labelWidth - 4);
+
+      ctx.fillStyle = '#e02424';
+      ctx.fillRect(labelX, chartArea.top + 8, labelWidth, 22);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(marker.label, labelX + 6, chartArea.top + 23);
+    }
+
+    ctx.restore();
+  }
+};
+
+Chart.register(markerLinesPlugin);
 
 @Component({
   selector: 'app-line-chart',
@@ -29,6 +85,7 @@ export class LineChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() height = 260;
   @Input() scrollable = false;
   @Input() pointWidth = 56;
+  @Input() markers: ChartMarker[] = [];
 
   @ViewChild('canvas', { static: false }) canvas!: ElementRef<HTMLCanvasElement>;
   private chart?: Chart;
@@ -41,7 +98,7 @@ export class LineChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['points'] || changes['title'] || changes['yLabel']) {
+    if (changes['points'] || changes['title'] || changes['yLabel'] || changes['markers']) {
       this.scheduleRender();
     }
   }
@@ -96,14 +153,14 @@ export class LineChartComponent implements AfterViewInit, OnChanges, OnDestroy {
           responsive: true,
           maintainAspectRatio: false,
           animation: false,
-           layout: {
-          padding: {
-          left: 6,
-          right: 10,
-          top: 6,
-          bottom: 6
-      }
-    },
+          layout: {
+            padding: {
+              left: 6,
+              right: 10,
+              top: 6,
+              bottom: 6
+            }
+          },
           interaction: {
             mode: 'index',
             intersect: false
@@ -135,41 +192,45 @@ export class LineChartComponent implements AfterViewInit, OnChanges, OnDestroy {
               borderWidth: 1,
               padding: 10,
               displayColors: true
-            }
+            },
+            markerLines: {
+              markers: this.markers,
+              points: this.points
+            } as any
           },
           scales: {
-                      x: {
-                border: {
-                  display: true
-                },
-                grid: {
-                  display: true,
-                  drawTicks: true,
-                  color: 'rgba(47, 75, 147, 0.08)'
-                },
-                ticks: {
-                  display: true,
-                  color: '#6b7893',
-                  maxRotation: 0,
-                  autoSkip: true,
-                  maxTicksLimit: 6,
-                  padding: 8
-                }
+            x: {
+              border: {
+                display: true
               },
-              y: {
-                grace: '5%',
-                border: {
-                  display: true
-                },
-                grid: {
-                  display: true,
-                  drawTicks: true,
-                  color: 'rgba(47, 75, 147, 0.08)'
-                },
-                ticks: {
-                  display: true,
-                  color: '#6b7893',
-                  padding: 8
+              grid: {
+                display: true,
+                drawTicks: true,
+                color: 'rgba(47, 75, 147, 0.08)'
+              },
+              ticks: {
+                display: true,
+                color: '#6b7893',
+                maxRotation: 0,
+                autoSkip: true,
+                maxTicksLimit: 6,
+                padding: 8
+              }
+            },
+            y: {
+              grace: '5%',
+              border: {
+                display: true
+              },
+              grid: {
+                display: true,
+                drawTicks: true,
+                color: 'rgba(47, 75, 147, 0.08)'
+              },
+              ticks: {
+                display: true,
+                color: '#6b7893',
+                padding: 8
               }
             }
           }
@@ -184,6 +245,10 @@ export class LineChartComponent implements AfterViewInit, OnChanges, OnDestroy {
     dataset.label = this.yLabel || this.title || 'Value';
     dataset.data = data;
     dataset.pointRadius = data.length ? 2 : 0;
+    (this.chart.options.plugins as any).markerLines = {
+      markers: this.markers,
+      points: this.points
+    };
     this.chart.resize();
     this.chart.update('none');
   }

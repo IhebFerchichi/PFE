@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
@@ -15,11 +15,18 @@ export class LoginComponent {
   email = '';
   password = '';
   error = '';
+  info = '';
 
   constructor(
     public readonly auth: AuthService,
-    private readonly router: Router
-  ) {}
+    private readonly router: Router,
+    private readonly route: ActivatedRoute
+  ) {
+    this.route.queryParamMap.subscribe((params) => {
+      this.info = params.get('message') ?? '';
+      this.email = params.get('email') ?? this.email;
+    });
+  }
 
   submit(): void {
     this.error = '';

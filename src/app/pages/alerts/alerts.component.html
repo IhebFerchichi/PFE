@@ -1,65 +1,209 @@
 <h1 class="page-title">Alerts</h1>
 
-<h3>Active</h3>
-<table mat-table [dataSource]="active" class="mat-elevation-z1 tbl">
+<div class="feedback" *ngIf="feedback">{{ feedback }}</div>
 
-  <ng-container matColumnDef="alertCode">
-    <th mat-header-cell *matHeaderCellDef> Code </th>
-    <td mat-cell *matCellDef="let a"> {{a.alertCode}} </td>
-  </ng-container>
+<section class="filterShell">
+  <div class="filterShellHead">
+    <div>
+      <h3>Filter Alerts</h3>
+      <p>Refine the active and recent alert tables without reloading the page.</p>
+    </div>
+    <button mat-stroked-button type="button" class="filterResetBtn" (click)="resetFilters()">Reset Filters</button>
+  </div>
 
-  <ng-container matColumnDef="severity">
-    <th mat-header-cell *matHeaderCellDef> Severity </th>
-    <td mat-cell *matCellDef="let a"> {{a.severity}} </td>
-  </ng-container>
+  <div class="filterBar">
+    <label>
+      <span>Search</span>
+      <input [(ngModel)]="filterCode" type="text" placeholder="Code, title, pack..." />
+    </label>
 
-  <ng-container matColumnDef="packType">
-    <th mat-header-cell *matHeaderCellDef> Pack </th>
-    <td mat-cell *matCellDef="let a"> {{a.packType}} </td>
-  </ng-container>
+    <label>
+      <span>Severity</span>
+      <select [(ngModel)]="filterSeverity">
+        <option *ngFor="let option of severityOptions" [value]="option">{{ option }}</option>
+      </select>
+    </label>
 
-  <ng-container matColumnDef="title">
-    <th mat-header-cell *matHeaderCellDef> Title </th>
-    <td mat-cell *matCellDef="let a"> {{a.title}} </td>
-  </ng-container>
+    <label>
+      <span>Origin</span>
+      <select [(ngModel)]="filterOrigin">
+        <option *ngFor="let option of originOptions" [value]="option">{{ option }}</option>
+      </select>
+    </label>
 
-  <ng-container matColumnDef="createdAt">
-    <th mat-header-cell *matHeaderCellDef> Created </th>
-    <td mat-cell *matCellDef="let a"> {{ a.createdAt | date:"dd MMM yyyy 'at' HH:mm:ss" }} </td>
-  </ng-container>
+    <label>
+      <span>Pack Type</span>
+      <select [(ngModel)]="filterPackType">
+        <option *ngFor="let option of packTypeOptions" [value]="option">{{ option }}</option>
+      </select>
+    </label>
 
-  <tr mat-header-row *matHeaderRowDef="activeCols"></tr>
-  <tr mat-row *matRowDef="let row; columns: activeCols;"></tr>
-</table>
+    <label>
+      <span>Owner</span>
+      <input [(ngModel)]="filterOwner" type="text" placeholder="Owner name or email" />
+    </label>
+  </div>
 
-<h3 style="margin-top:24px;">Recent</h3>
-<table mat-table [dataSource]="recent" class="mat-elevation-z1 tbl">
+  <div class="filterBar filterBarSecondary">
+    <label>
+      <span>Recent State</span>
+      <select [(ngModel)]="recentState">
+        <option value="ALL">ALL</option>
+        <option value="ACTIVE">ACTIVE</option>
+        <option value="RESOLVED">RESOLVED</option>
+      </select>
+    </label>
 
-  <ng-container matColumnDef="alertCode">
-    <th mat-header-cell *matHeaderCellDef> Code </th>
-    <td mat-cell *matCellDef="let a"> {{a.alertCode}} </td>
-  </ng-container>
+    <label>
+      <span>Acknowledged</span>
+      <select [(ngModel)]="recentAcknowledged">
+        <option value="ALL">ALL</option>
+        <option value="ACK">ACKNOWLEDGED</option>
+        <option value="UNACK">UNACKNOWLEDGED</option>
+      </select>
+    </label>
+  </div>
+</section>
 
-  <ng-container matColumnDef="severity">
-    <th mat-header-cell *matHeaderCellDef> Severity </th>
-    <td mat-cell *matCellDef="let a"> {{a.severity}} </td>
-  </ng-container>
+<div class="sectionHead">
+  <div class="sectionHeadTitle">
+    <h3>Active</h3>
+    <span class="sectionCount">{{ filteredActive.length }}</span>
+  </div>
+  <button mat-stroked-button type="button" (click)="exportActiveCsv()">Export CSV</button>
+</div>
 
-  <ng-container matColumnDef="packType">
-    <th mat-header-cell *matHeaderCellDef> Pack </th>
-    <td mat-cell *matCellDef="let a"> {{a.packType}} </td>
-  </ng-container>
+<ng-container *ngIf="filteredActive.length; else activeEmpty">
+  <table mat-table [dataSource]="filteredActive" class="mat-elevation-z1 tbl">
+    <ng-container matColumnDef="alertCode">
+      <th mat-header-cell *matHeaderCellDef>Code</th>
+      <td mat-cell *matCellDef="let a">{{ a.alertCode }}</td>
+    </ng-container>
 
-  <ng-container matColumnDef="active">
-    <th mat-header-cell *matHeaderCellDef> Active </th>
-    <td mat-cell *matCellDef="let a"> {{a.active}} </td>
-  </ng-container>
+    <ng-container matColumnDef="severity">
+      <th mat-header-cell *matHeaderCellDef>Severity</th>
+      <td mat-cell *matCellDef="let a">{{ a.severity }}</td>
+    </ng-container>
 
-  <ng-container matColumnDef="createdAt">
-    <th mat-header-cell *matHeaderCellDef> Created </th>
-    <td mat-cell *matCellDef="let a"> {{ a.createdAt | date:"dd MMM yyyy 'at' HH:mm:ss" }} </td>
-  </ng-container>
+    <ng-container matColumnDef="title">
+      <th mat-header-cell *matHeaderCellDef>Title</th>
+      <td mat-cell *matCellDef="let a">{{ a.title }}</td>
+    </ng-container>
 
-  <tr mat-header-row *matHeaderRowDef="recentCols"></tr>
-  <tr mat-row *matRowDef="let row; columns: recentCols;"></tr>
-</table>
+    <ng-container matColumnDef="origin">
+      <th mat-header-cell *matHeaderCellDef>Origin</th>
+      <td mat-cell *matCellDef="let a">{{ alertOrigin(a) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="context">
+      <th mat-header-cell *matHeaderCellDef>Context</th>
+      <td mat-cell *matCellDef="let a">
+        <div class="contextTitle">{{ alertContextTitle(a) }}</div>
+        <div class="contextMeta">{{ alertContextMeta(a) }}</div>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="owner">
+      <th mat-header-cell *matHeaderCellDef>Belongs To</th>
+      <td mat-cell *matCellDef="let a">
+        <div class="ownerMeta">{{ alertOwnerMeta(a) }}</div>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="createdAt">
+      <th mat-header-cell *matHeaderCellDef>Created</th>
+      <td mat-cell *matCellDef="let a">{{ a.createdAt | date:"dd MMM yyyy 'at' HH:mm:ss" }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Actions</th>
+      <td mat-cell *matCellDef="let a">
+        <div class="actionsCell">
+          <button mat-stroked-button type="button" (click)="acknowledge(a.id)" [disabled]="isBusy(a.id) || a.acknowledged">
+            {{ a.acknowledged ? 'Acknowledged' : 'Acknowledge' }}
+          </button>
+          <button mat-flat-button type="button" color="warn" (click)="resolve(a.id)" [disabled]="isBusy(a.id)">
+            Resolve
+          </button>
+        </div>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="activeCols"></tr>
+    <tr mat-row *matRowDef="let row; columns: activeCols;"></tr>
+  </table>
+</ng-container>
+
+<ng-template #activeEmpty>
+  <div class="emptyTableState">
+    <div class="emptyTableTitle">No active alerts match these filters.</div>
+    <div class="emptyTableText">Try broadening the search or reset the filters to see all active alerts again.</div>
+  </div>
+</ng-template>
+
+<div class="sectionHead sectionHeadSpaced">
+  <div class="sectionHeadTitle">
+    <h3>Recent</h3>
+    <span class="sectionCount">{{ filteredRecent.length }}</span>
+  </div>
+  <button mat-stroked-button type="button" (click)="exportRecentCsv()">Export CSV</button>
+</div>
+
+<ng-container *ngIf="filteredRecent.length; else recentEmpty">
+  <table mat-table [dataSource]="filteredRecent" class="mat-elevation-z1 tbl">
+    <ng-container matColumnDef="alertCode">
+      <th mat-header-cell *matHeaderCellDef>Code</th>
+      <td mat-cell *matCellDef="let a">{{ a.alertCode }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="severity">
+      <th mat-header-cell *matHeaderCellDef>Severity</th>
+      <td mat-cell *matCellDef="let a">{{ a.severity }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="origin">
+      <th mat-header-cell *matHeaderCellDef>Origin</th>
+      <td mat-cell *matCellDef="let a">{{ alertOrigin(a) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="context">
+      <th mat-header-cell *matHeaderCellDef>Context</th>
+      <td mat-cell *matCellDef="let a">
+        <div class="contextTitle">{{ alertContextTitle(a) }}</div>
+        <div class="contextMeta">{{ alertContextMeta(a) }}</div>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="owner">
+      <th mat-header-cell *matHeaderCellDef>Belongs To</th>
+      <td mat-cell *matCellDef="let a">
+        <div class="ownerMeta">{{ alertOwnerMeta(a) }}</div>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="active">
+      <th mat-header-cell *matHeaderCellDef>Active</th>
+      <td mat-cell *matCellDef="let a">{{ a.active }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="acknowledged">
+      <th mat-header-cell *matHeaderCellDef>Acknowledged</th>
+      <td mat-cell *matCellDef="let a">{{ a.acknowledged }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="createdAt">
+      <th mat-header-cell *matHeaderCellDef>Created</th>
+      <td mat-cell *matCellDef="let a">{{ a.createdAt | date:"dd MMM yyyy 'at' HH:mm:ss" }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="recentCols"></tr>
+    <tr mat-row *matRowDef="let row; columns: recentCols;"></tr>
+  </table>
+</ng-container>
+
+<ng-template #recentEmpty>
+  <div class="emptyTableState">
+    <div class="emptyTableTitle">No recent alerts match these filters.</div>
+    <div class="emptyTableText">You can export the filtered table after narrowing it down to the alerts you need.</div>
+  </div>
+</ng-template>

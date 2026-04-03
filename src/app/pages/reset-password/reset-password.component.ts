@@ -1,33 +1,40 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
-  selector: 'app-signup',
+  selector: 'app-reset-password',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
-  templateUrl: './signup.component.html',
-  styleUrl: './signup.component.scss'
+  templateUrl: './reset-password.component.html',
+  styleUrl: './reset-password.component.scss'
 })
-export class SignupComponent {
-  fullName = '';
-  email = '';
+export class ResetPasswordComponent {
+  token = '';
   password = '';
   confirmPassword = '';
-  error = '';
   info = '';
+  error = '';
 
   constructor(
     public readonly auth: AuthService,
+    private readonly route: ActivatedRoute,
     private readonly router: Router
-  ) {}
+  ) {
+    this.route.queryParamMap.subscribe((params) => {
+      this.token = params.get('token') ?? this.token;
+    });
+  }
 
   submit(): void {
-    this.error = '';
+    if (!this.token.trim()) {
+      this.error = 'Reset token is missing.';
+      return;
+    }
 
-    if (!this.fullName.trim() || !this.email.trim() || !this.password || !this.confirmPassword) {
+    if (!this.password || !this.confirmPassword) {
       this.error = 'Please fill in all fields.';
       return;
     }
@@ -37,18 +44,18 @@ export class SignupComponent {
       return;
     }
 
-    this.auth.register(this.fullName.trim(), this.email.trim(), this.password).subscribe({
+    this.error = '';
+    this.auth.resetPassword(this.token.trim(), this.password).subscribe({
       next: (response) => {
         this.info = response.message;
-        this.router.navigate(['/verify-email'], {
+        this.router.navigate(['/login'], {
           queryParams: {
-            email: this.email.trim(),
             message: response.message
           }
         });
       },
       error: (error) => {
-        this.error = error?.error?.message || 'Sign up failed. Please try again.';
+        this.error = error?.error?.message || 'Could not reset your password.';
       }
     });
   }

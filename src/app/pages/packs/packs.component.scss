@@ -217,6 +217,103 @@
   color: var(--brand-red);
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sectionHeaderActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chartControlBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid #d8e4f6;
+  background: linear-gradient(180deg, #fbfcff 0%, #f6f9ff 100%);
+}
+
+.chartHint {
+  margin-bottom: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.markerBtn {
+  border: 1px solid rgba(224, 36, 36, 0.28);
+  border-radius: 999px;
+  background: rgba(224, 36, 36, 0.08);
+  color: #c71f1f;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    transform 140ms ease;
+}
+
+.markerBtn:hover {
+  background: rgba(224, 36, 36, 0.14);
+  border-color: rgba(224, 36, 36, 0.4);
+  transform: translateY(-1px);
+}
+
+.toolbarBtn {
+  border: 1px solid #cfdaf0;
+  border-radius: 999px;
+  background: #f7faff;
+  color: var(--brand-blue-dark);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    transform 140ms ease;
+}
+
+.toolbarBtn:hover {
+  background: #edf3ff;
+  border-color: #b7caeb;
+  transform: translateY(-1px);
+}
+
+.searchLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand-blue-dark);
+}
+
+.searchLabel input {
+  border: 1px solid #d2deef;
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: #ffffff;
+  color: var(--text-main);
+  min-width: 220px;
+}
+
+.chartModalStatus {
+  margin-bottom: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
 .cells {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -283,3 +380,4 @@
   margin: 0;
   color: var(--text-muted);
 }
+

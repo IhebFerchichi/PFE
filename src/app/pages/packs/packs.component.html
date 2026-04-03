@@ -56,15 +56,15 @@
       </mat-card>
 
       <mat-card class="section">
-        <mat-card-title>LFP Trends (latest 10 samples)</mat-card-title>
+        <mat-card-title>LFP Trends (live session window)</mat-card-title>
         <mat-card-content class="chartGrid">
-          <button type="button" class="chartAction" (click)="openExpandedChart('LFP Voltage History', 'V', lfpVoltageFullPoints)">
+          <button type="button" class="chartAction" (click)="openExpandedChart('lfp-voltage', 'LFP Voltage History', 'V', lfpVoltageFullPoints)">
             <app-line-chart title="Voltage" [points]="lfpVoltagePoints" yLabel="V" [height]="260"></app-line-chart>
           </button>
-          <button type="button" class="chartAction" (click)="openExpandedChart('LFP Current History', 'A', lfpCurrentFullPoints)">
+          <button type="button" class="chartAction" (click)="openExpandedChart('lfp-current', 'LFP Current History', 'A', lfpCurrentFullPoints)">
             <app-line-chart title="Current" [points]="lfpCurrentPoints" yLabel="A" [height]="260"></app-line-chart>
           </button>
-          <button type="button" class="chartAction" (click)="openExpandedChart('LFP Temperature History', 'deg C', lfpTemperatureFullPoints)">
+          <button type="button" class="chartAction" (click)="openExpandedChart('lfp-temperature', 'LFP Temperature History', 'deg C', lfpTemperatureFullPoints)">
             <app-line-chart title="Temperature" [points]="lfpTemperaturePoints" yLabel="deg C" [height]="260"></app-line-chart>
           </button>
         </mat-card-content>
@@ -91,12 +91,32 @@
       </mat-card>
 
       <mat-card class="section" *ngIf="selectedLfpCell !== null">
-        <mat-card-title>
-          LFP Cell {{ selectedLfpCell }} Voltage (last hour)
-          <button type="button" class="closeBtn" (click)="clearLfpCell()">x</button>
+        <mat-card-title class="sectionHeader">
+          <span>LFP Cell {{ selectedLfpCell }} Voltage History</span>
+          <span class="sectionHeaderActions">
+            <button type="button" class="toolbarBtn" (click)="exportLfpCellCsv()">Export CSV</button>
+            <button type="button" class="markerBtn" (click)="addLfpCellMarker()">Mark Event</button>
+            <button type="button" class="closeBtn" (click)="clearLfpCell()">x</button>
+          </span>
         </mat-card-title>
         <mat-card-content>
-          <app-line-chart [points]="lfpCellPoints" yLabel="V" [height]="320" [scrollable]="true" [pointWidth]="64"></app-line-chart>
+          <div class="chartControlBar">
+            <button type="button" class="toolbarBtn" (click)="useRecentLfpCellWindow()">Use Recent Window</button>
+            <label class="searchLabel">
+              <span>From</span>
+              <input type="datetime-local" [(ngModel)]="lfpCellFrom" />
+            </label>
+            <label class="searchLabel">
+              <span>To</span>
+              <input type="datetime-local" [(ngModel)]="lfpCellTo" />
+            </label>
+            <button type="button" class="toolbarBtn" (click)="fetchLfpCellDateRange()">Fetch Date Range</button>
+          </div>
+
+          <div class="chartModalStatus" *ngIf="lfpCellHistoryLoading">Loading requested cell history...</div>
+          <div class="chartHint">{{ lfpCellHistoryHint }}</div>
+
+          <app-line-chart [points]="lfpCellPoints" [markers]="lfpCellMarkers" yLabel="V" [height]="320" [scrollable]="true" [pointWidth]="64"></app-line-chart>
         </mat-card-content>
       </mat-card>
     </div>
@@ -117,15 +137,15 @@
       </mat-card>
 
       <mat-card class="section">
-        <mat-card-title>Supercap Trends (latest 10 samples)</mat-card-title>
+        <mat-card-title>Supercap Trends (live session window)</mat-card-title>
         <mat-card-content class="chartGrid">
-          <button type="button" class="chartAction" (click)="openExpandedChart('Supercap Voltage History', 'V', supercapVoltageFullPoints)">
+          <button type="button" class="chartAction" (click)="openExpandedChart('supercap-voltage', 'Supercap Voltage History', 'V', supercapVoltageFullPoints)">
             <app-line-chart title="Voltage" [points]="supercapVoltagePoints" yLabel="V" [height]="260"></app-line-chart>
           </button>
-          <button type="button" class="chartAction" (click)="openExpandedChart('Supercap Current History', 'A', supercapCurrentFullPoints)">
+          <button type="button" class="chartAction" (click)="openExpandedChart('supercap-current', 'Supercap Current History', 'A', supercapCurrentFullPoints)">
             <app-line-chart title="Current" [points]="supercapCurrentPoints" yLabel="A" [height]="260"></app-line-chart>
           </button>
-          <button type="button" class="chartAction" (click)="openExpandedChart('Supercap Temperature History', 'deg C', supercapTemperatureFullPoints)">
+          <button type="button" class="chartAction" (click)="openExpandedChart('supercap-temperature', 'Supercap Temperature History', 'deg C', supercapTemperatureFullPoints)">
             <app-line-chart title="Temperature" [points]="supercapTemperaturePoints" yLabel="deg C" [height]="260"></app-line-chart>
           </button>
         </mat-card-content>
@@ -152,12 +172,32 @@
       </mat-card>
 
       <mat-card class="section" *ngIf="selectedScCell !== null">
-        <mat-card-title>
-          Supercap Cell {{ selectedScCell }} Voltage (last hour)
-          <button type="button" class="closeBtn" (click)="clearScCell()">x</button>
+        <mat-card-title class="sectionHeader">
+          <span>Supercap Cell {{ selectedScCell }} Voltage History</span>
+          <span class="sectionHeaderActions">
+            <button type="button" class="toolbarBtn" (click)="exportScCellCsv()">Export CSV</button>
+            <button type="button" class="markerBtn" (click)="addScCellMarker()">Mark Event</button>
+            <button type="button" class="closeBtn" (click)="clearScCell()">x</button>
+          </span>
         </mat-card-title>
         <mat-card-content>
-          <app-line-chart [points]="scCellPoints" yLabel="V" [height]="320" [scrollable]="true" [pointWidth]="64"></app-line-chart>
+          <div class="chartControlBar">
+            <button type="button" class="toolbarBtn" (click)="useRecentScCellWindow()">Use Recent Window</button>
+            <label class="searchLabel">
+              <span>From</span>
+              <input type="datetime-local" [(ngModel)]="scCellFrom" />
+            </label>
+            <label class="searchLabel">
+              <span>To</span>
+              <input type="datetime-local" [(ngModel)]="scCellTo" />
+            </label>
+            <button type="button" class="toolbarBtn" (click)="fetchScCellDateRange()">Fetch Date Range</button>
+          </div>
+
+          <div class="chartModalStatus" *ngIf="scCellHistoryLoading">Loading requested cell history...</div>
+          <div class="chartHint">{{ scCellHistoryHint }}</div>
+
+          <app-line-chart [points]="scCellPoints" [markers]="scCellMarkers" yLabel="V" [height]="320" [scrollable]="true" [pointWidth]="64"></app-line-chart>
         </mat-card-content>
       </mat-card>
     </div>
@@ -169,17 +209,41 @@
     <div class="chartModalHeader">
       <div>
         <h3>{{ expandedChart.title }}</h3>
-        <p>Scroll left and right to inspect older telemetry points.</p>
+        <p>{{ expandedHistoryHint }}</p>
       </div>
-      <button type="button" class="closeBtn" (click)="closeExpandedChart()">x</button>
+      <div class="sectionHeaderActions">
+        <button type="button" class="toolbarBtn" (click)="useRecentExpandedWindow()">Use Recent Window</button>
+        <button type="button" class="toolbarBtn" (click)="loadExpandedFullHistory()">Load Full History</button>
+        <label class="searchLabel">
+          <span>Find time</span>
+          <input type="datetime-local" [(ngModel)]="expandedSearchAt" />
+        </label>
+        <button type="button" class="toolbarBtn" (click)="fetchExpandedAroundSearch()">Fetch Around Time</button>
+        <label class="searchLabel">
+          <span>From</span>
+          <input type="datetime-local" [(ngModel)]="expandedFrom" />
+        </label>
+        <label class="searchLabel">
+          <span>To</span>
+          <input type="datetime-local" [(ngModel)]="expandedTo" />
+        </label>
+        <button type="button" class="toolbarBtn" (click)="fetchExpandedDateRange()">Fetch Date Range</button>
+        <button type="button" class="toolbarBtn" (click)="exportExpandedCsv()">Export CSV</button>
+        <button type="button" class="markerBtn" (click)="addExpandedMarker()">Mark Event</button>
+        <button type="button" class="closeBtn" (click)="closeExpandedChart()">x</button>
+      </div>
     </div>
+
+    <div class="chartModalStatus" *ngIf="expandedHistoryLoading">Loading requested history range...</div>
 
     <app-line-chart
       [title]="expandedChart.title"
       [points]="expandedChart.points"
+      [markers]="expandedChart.markers"
       [yLabel]="expandedChart.yLabel"
       [height]="440"
       [scrollable]="true"
       [pointWidth]="72"></app-line-chart>
   </div>
 </div>
+

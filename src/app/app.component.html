@@ -46,3 +46,27 @@
 <ng-template #authPage>
   <router-outlet></router-outlet>
 </ng-template>
+
+<div class="alert-toast-stack" *ngIf="showShell && alertToasts.length">
+  <div
+    class="alert-toast"
+    *ngFor="let toast of alertToasts"
+    [class.alert-toast-warning]="toast.severity === 'WARNING'"
+    [class.alert-toast-critical]="toast.severity === 'CRITICAL'">
+    <div class="alert-toast-head">
+      <div
+        class="alert-toast-badge"
+        [class.alert-toast-badge-warning]="toast.severity === 'WARNING'"
+        [class.alert-toast-badge-critical]="toast.severity === 'CRITICAL'">
+        {{ toast.severity }}
+      </div>
+      <button type="button" class="alert-toast-close" (click)="dismissToast(toast.id)">x</button>
+    </div>
+
+    <div class="alert-toast-title">{{ toast.title }}</div>
+    <div class="alert-toast-meta">{{ toast.code }} | {{ toast.source }} | {{ toast.packType }} | BMS {{ toast.bmsId }}</div>
+    <div class="alert-toast-pack">{{ toast.packLabel }}</div>
+    <div class="alert-toast-owner" *ngIf="toast.ownerLabel">{{ toast.ownerLabel }}</div>
+    <div class="alert-toast-text">A new active alert has been detected.</div>
+  </div>
+</div>

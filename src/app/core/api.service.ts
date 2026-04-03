@@ -15,6 +15,16 @@ export type VisiblePack = {
   createdAt: string;
 };
 
+export type SavedChartMarker = {
+  id: number;
+  packType: string;
+  bmsId: string;
+  chartKey: string;
+  cellIndex: number | null;
+  markedAt: string;
+  createdBy: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private baseUrl = 'http://localhost:8080';
@@ -85,6 +95,16 @@ export class ApiService {
     return this.getHistory(`/packs/supercap/cells/${cellIndex}/history`, fromIso, toIso, bmsId);
   }
 
+  getChartMarkers(packType: string, bmsId: string) {
+    return this.http.get<SavedChartMarker[]>(
+      `${this.baseUrl}/packs/markers?packType=${encodeURIComponent(packType)}&bmsId=${encodeURIComponent(bmsId)}`
+    );
+  }
+
+  createChartMarker(payload: { packType: string; bmsId: string; chartKey: string; cellIndex?: number | null }) {
+    return this.http.post<SavedChartMarker>(`${this.baseUrl}/packs/markers`, payload);
+  }
+
   createPackageRequest(payload: { requestedLabel: string; reason: string }) {
     return this.http.post<any>(`${this.baseUrl}/user/package-requests`, payload);
   }
@@ -95,6 +115,14 @@ export class ApiService {
 
   getPendingPackageRequests() {
     return this.http.get<any[]>(`${this.baseUrl}/admin/package-requests/pending`);
+  }
+
+  acknowledgeAlert(alertId: number) {
+    return this.http.post<any>(`${this.baseUrl}/alerts/${alertId}/acknowledge`, {});
+  }
+
+  resolveAlert(alertId: number) {
+    return this.http.post<any>(`${this.baseUrl}/alerts/${alertId}/resolve`, {});
   }
 
   approvePackageRequest(requestId: number, payload: { adminComment: string; lfpBmsId: string; supercapBmsId: string }) {

@@ -88,6 +88,14 @@ button:disabled {
   font-weight: 600;
 }
 
+.success {
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #eef8f1;
+  color: #1e6a33;
+  font-weight: 600;
+}
+
 .switch-auth {
   margin: 18px 0 0;
   color: var(--text-muted);

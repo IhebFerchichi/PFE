@@ -10,11 +10,17 @@ export type AuthUser = {
   email: string;
   fullName: string;
   role: UserRole;
+  emailVerified: boolean;
 };
 
 type LoginResponse = AuthUser & {
   token: string;
   userId: number;
+};
+
+type AuthMessageResponse = {
+  message: string;
+  email: string;
 };
 
 @Injectable({ providedIn: 'root' })
@@ -43,7 +49,39 @@ export class AuthService {
   register(fullName: string, email: string, password: string) {
     this.loading.set(true);
 
-    return this.http.post<LoginResponse>(`${this.baseUrl}/auth/register`, { fullName, email, password }).pipe(
+    return this.http.post<AuthMessageResponse>(`${this.baseUrl}/auth/register`, { fullName, email, password }).pipe(
+      finalize(() => this.loading.set(false))
+    );
+  }
+
+  verifyEmail(token: string) {
+    this.loading.set(true);
+
+    return this.http.post<AuthMessageResponse>(`${this.baseUrl}/auth/verify-email`, { token }).pipe(
+      finalize(() => this.loading.set(false))
+    );
+  }
+
+  resendVerification(email: string) {
+    this.loading.set(true);
+
+    return this.http.post<AuthMessageResponse>(`${this.baseUrl}/auth/resend-verification`, { email }).pipe(
+      finalize(() => this.loading.set(false))
+    );
+  }
+
+  requestPasswordReset(email: string) {
+    this.loading.set(true);
+
+    return this.http.post<AuthMessageResponse>(`${this.baseUrl}/auth/forgot-password`, { email }).pipe(
+      finalize(() => this.loading.set(false))
+    );
+  }
+
+  resetPassword(token: string, password: string) {
+    this.loading.set(true);
+
+    return this.http.post<AuthMessageResponse>(`${this.baseUrl}/auth/reset-password`, { token, password }).pipe(
       finalize(() => this.loading.set(false))
     );
   }
@@ -61,7 +99,8 @@ export class AuthService {
       id: response.userId,
       email: response.email,
       fullName: response.fullName,
-      role: response.role
+      role: response.role,
+      emailVerified: response.emailVerified
     };
 
     this.token.set(response.token);
