@@ -10,6 +10,7 @@ import '../models/pack_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
+import 'ai_predictions_screen.dart';
 import 'alerts_screen.dart';
 import 'dashboard_screen.dart';
 import 'packs_screen.dart';
@@ -32,7 +33,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   late final AlertMonitor _alertMonitor;
   StreamSubscription<AlertItem>? _foregroundAlertSubscription;
   StreamSubscription<void>? _openAlertsSubscription;
+  Timer? _quietAlertTimer;
   bool _alertDialogOpen = false;
+  int _pendingQuietAlertCount = 0;
+  int _pendingAdminAlertCount = 0;
+  int _pendingAdminCriticalCount = 0;
 
   @override
   void initState() {
@@ -49,7 +54,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         .listen((_) => _openAlertsTab());
 
     if (widget.controller.notifications.consumePendingAlertOpen()) {
-      _selectedIndex = 2;
+      _selectedIndex = 3;
     }
   }
 
@@ -60,6 +65,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     _alertMonitor.dispose();
     _foregroundAlertSubscription?.cancel();
     _openAlertsSubscription?.cancel();
+    _quietAlertTimer?.cancel();
     super.dispose();
   }
 
@@ -107,8 +113,109 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     }
 
     _seenForegroundAlertKeys.add(alertKey);
+
+    if (widget.controller.user?.isAdmin ?? false) {
+      _queueAdminAlertSummary(alert);
+      return;
+    }
+
+    if (!_isCriticalAlert(alert)) {
+      _queueQuietAlertSummary();
+      return;
+    }
+
     _pendingForegroundAlerts.add(alert);
     _showNextForegroundAlert();
+  }
+
+  bool _isCriticalAlert(AlertItem alert) =>
+      alert.severity.toUpperCase() == 'CRITICAL';
+
+  void _queueQuietAlertSummary() {
+    _pendingQuietAlertCount++;
+    _quietAlertTimer ??= Timer(
+      const Duration(milliseconds: 600),
+      _showQuietAlertSummary,
+    );
+  }
+
+  void _queueAdminAlertSummary(AlertItem alert) {
+    _pendingAdminAlertCount++;
+    if (_isCriticalAlert(alert)) {
+      _pendingAdminCriticalCount++;
+    }
+
+    _quietAlertTimer ??= Timer(
+      const Duration(milliseconds: 600),
+      _showAdminAlertSummary,
+    );
+  }
+
+  void _showQuietAlertSummary() {
+    final count = _pendingQuietAlertCount;
+    _pendingQuietAlertCount = 0;
+    _quietAlertTimer = null;
+
+    if (!mounted || count <= 0 || _selectedIndex == 3) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            count == 1
+                ? 'New warning alert added to Alerts.'
+                : '$count new warning alerts added to Alerts.',
+          ),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'Open',
+            onPressed: _openAlertsTab,
+          ),
+        ),
+      );
+    });
+  }
+
+  void _showAdminAlertSummary() {
+    final total = _pendingAdminAlertCount;
+    final critical = _pendingAdminCriticalCount;
+    _pendingAdminAlertCount = 0;
+    _pendingAdminCriticalCount = 0;
+    _quietAlertTimer = null;
+
+    if (!mounted || total <= 0 || _selectedIndex == 3) {
+      return;
+    }
+
+    final content = critical > 0
+        ? '$total new alerts detected ($critical critical). Review them in Alerts.'
+        : total == 1
+            ? '1 new alert detected. Review it in Alerts.'
+            : '$total new alerts detected. Review them in Alerts.';
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(content),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'Open',
+            onPressed: _openAlertsTab,
+          ),
+        ),
+      );
+    });
   }
 
   String _alertKey(AlertItem alert) {
@@ -139,7 +246,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       return;
     }
 
-    setState(() => _selectedIndex = 2);
+    setState(() => _selectedIndex = 3);
   }
 
   void _showNextForegroundAlert() {
@@ -159,7 +266,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Live alert detected'),
+          title: const Text('Critical alert detected'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,11 +347,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     final pages = <Widget>[
       DashboardScreen(controller: widget.controller),
       PacksScreen(controller: widget.controller),
+      AiPredictionsScreen(controller: widget.controller),
       AlertsScreen(controller: widget.controller),
       ProfileScreen(controller: widget.controller),
     ];
 
-    final titles = ['Overview', 'Packs', 'Alerts', 'Profile'];
+    final titles = ['Overview', 'Packs', 'AI Predictions', 'Alerts', 'Profile'];
 
     return Scaffold(
       body: AppSurface(
@@ -300,6 +408,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             icon: Icon(Icons.battery_5_bar_outlined),
             selectedIcon: Icon(Icons.battery_full_rounded),
             label: 'Packs',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.psychology_outlined),
+            selectedIcon: Icon(Icons.psychology_rounded),
+            label: 'AI',
           ),
           NavigationDestination(
             icon: Icon(Icons.warning_amber_outlined),

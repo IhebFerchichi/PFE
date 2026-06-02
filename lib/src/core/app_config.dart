@@ -21,7 +21,7 @@ class AppConfig {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return 'http://10.0.30.14:8080';
-      // return 'http://192.168.33.10:8080';
+      //return 'http://192.168.100.3:8080';
 
       case TargetPlatform.iOS:
       case TargetPlatform.macOS:

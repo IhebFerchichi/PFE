@@ -26,6 +26,7 @@ class PackSelectorCard extends StatelessWidget {
       duration: const Duration(milliseconds: 180),
       margin: const EdgeInsets.only(right: 12),
       width: 286,
+      constraints: const BoxConstraints(minHeight: 228),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
@@ -80,7 +81,8 @@ class PackSelectorCard extends StatelessWidget {
                                   .titleMedium
                                   ?.copyWith(
                                     color: cardTextColor,
-                                    fontSize: 20,
+                                    fontSize: 18,
+                                    height: 1.15,
                                   ),
                             ),
                             const SizedBox(height: 6),
@@ -105,9 +107,9 @@ class PackSelectorCard extends StatelessWidget {
                   const SizedBox(height: 14),
                   if (showOwner) ...[
                     Text(
+                      pack.ownerFullName,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      pack.ownerFullName,
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: cardTextColor,
@@ -119,6 +121,7 @@ class PackSelectorCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
+                        fontSize: 13,
                         color: selected
                             ? Colors.white70
                             : AppColors.ink.withOpacity(0.62),

@@ -7,11 +7,7 @@ import '../widgets/app_choice_chip.dart';
 import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 
-enum _AuthView {
-  signIn,
-  signUp,
-  forgotPassword;
-}
+enum _AuthView { signIn, signUp, forgotPassword }
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.controller});
@@ -179,8 +175,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               const SizedBox(height: 18),
                               Text(
                                 _title,
-                                style:
-                                    Theme.of(context).textTheme.headlineMedium,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineMedium,
                               ),
                               const SizedBox(height: 8),
                               Text(
@@ -355,9 +352,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                           _view == _AuthView.forgotPassword
                                               ? Icons.mail_outline_rounded
                                               : _view == _AuthView.signUp
-                                                  ? Icons
-                                                      .person_add_alt_1_rounded
-                                                  : Icons.login_rounded,
+                                              ? Icons.person_add_alt_1_rounded
+                                              : Icons.login_rounded,
                                         ),
                                   label: Text(
                                     widget.controller.authBusy
@@ -366,7 +362,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   style: FilledButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
-                                        vertical: 16),
+                                      vertical: 16,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -377,7 +374,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color: AppColors.sand,
                                   borderRadius: BorderRadius.circular(18),
                                 ),
-                                child: Column(
+                                /*child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
@@ -395,7 +392,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           .bodyMedium,
                                     ),
                                   ],
-                                ),
+                                ),*/
                               ),
                             ],
                           ),
@@ -414,10 +411,7 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 class _MessageBanner extends StatelessWidget {
-  const _MessageBanner({
-    required this.color,
-    required this.message,
-  });
+  const _MessageBanner({required this.color, required this.message});
 
   final Color color;
   final String message;
@@ -433,9 +427,7 @@ class _MessageBanner extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(color: color),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: color),
       ),
     );
   }

@@ -116,7 +116,8 @@ class _AlertsScreenState extends State<AlertsScreen> {
     for (final pack in _packs) {
       final matchesLfp =
           alert.packType.toUpperCase() == 'LFP' && pack.lfpBmsId == alert.bmsId;
-      final matchesSupercap = alert.packType.toUpperCase() == 'SUPERCAP' &&
+      final matchesSupercap =
+          alert.packType.toUpperCase() == 'SUPERCAP' &&
           pack.supercapBmsId == alert.bmsId;
       if (matchesLfp || matchesSupercap) {
         return pack;
@@ -140,17 +141,17 @@ class _AlertsScreenState extends State<AlertsScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(successMessage)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(successMessage)));
       await _load();
     } on ApiException catch (error) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
       setState(() {
         _busyAlertIds.remove(alert.id);
       });
@@ -217,10 +218,10 @@ class _AlertsScreenState extends State<AlertsScreen> {
                         icon: severity == 'ALL'
                             ? Icons.tune_rounded
                             : severity == 'CRITICAL'
-                                ? Icons.warning_rounded
-                                : severity == 'WARNING'
-                                    ? Icons.report_problem_rounded
-                                    : Icons.info_outline_rounded,
+                            ? Icons.warning_rounded
+                            : severity == 'WARNING'
+                            ? Icons.report_problem_rounded
+                            : Icons.info_outline_rounded,
                       ),
                   ],
                 ),
@@ -260,11 +261,11 @@ class _AlertsScreenState extends State<AlertsScreen> {
                             onAcknowledge: alert.acknowledged
                                 ? null
                                 : () => _actOnAlert(
-                                      alert,
-                                      () => widget.controller.api
-                                          .acknowledgeAlert(alert.id),
-                                      'Alert acknowledged.',
-                                    ),
+                                    alert,
+                                    () => widget.controller.api
+                                        .acknowledgeAlert(alert.id),
+                                    'Alert acknowledged.',
+                                  ),
                             onResolve: () => _actOnAlert(
                               alert,
                               () =>
@@ -351,7 +352,7 @@ class _AlertsHero extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       activeFilter == 'ALL'
-                          ? 'Watching every live alert across your accessible packs.'
+                          ? ''
                           : 'Focused on $activeFilter alerts right now.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
@@ -359,8 +360,10 @@ class _AlertsHero extends StatelessWidget {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.coral.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(16),
@@ -377,9 +380,9 @@ class _AlertsHero extends StatelessWidget {
                     Text(
                       '$criticalCount critical',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.coral,
-                            fontWeight: FontWeight.w800,
-                          ),
+                        color: AppColors.coral,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
@@ -453,15 +456,12 @@ class _HeroStat extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.ink,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: AppColors.ink,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
@@ -493,8 +493,8 @@ class _AlertCard extends StatelessWidget {
     final packLabel = pack?.displayName ?? 'Unassigned pack';
     final ownerLabel = isAdmin
         ? (pack == null
-            ? 'Unknown owner'
-            : '${pack!.ownerFullName} (${pack!.ownerEmail})')
+              ? 'Unknown owner'
+              : '${pack!.ownerFullName} (${pack!.ownerEmail})')
         : (pack?.ownerFullName ?? 'My pack');
 
     return Container(
@@ -529,10 +529,7 @@ class _AlertCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 alignment: Alignment.center,
-                child: Icon(
-                  _alertIcon(alert.severity),
-                  color: badgeColor,
-                ),
+                child: Icon(_alertIcon(alert.severity), color: badgeColor),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -541,14 +538,8 @@ class _AlertCard extends StatelessWidget {
                   runSpacing: 8,
                   children: [
                     StatusBadge(label: alert.severity, color: badgeColor),
-                    _TagBadge(
-                      label: alert.packType,
-                      color: AppColors.ocean,
-                    ),
-                    _TagBadge(
-                      label: alert.alertCode,
-                      color: AppColors.warning,
-                    ),
+                    _TagBadge(label: alert.packType, color: AppColors.ocean),
+                    _TagBadge(label: alert.alertCode, color: AppColors.warning),
                   ],
                 ),
               ),
@@ -645,10 +636,7 @@ class _AlertCard extends StatelessWidget {
 }
 
 class _TagBadge extends StatelessWidget {
-  const _TagBadge({
-    required this.label,
-    required this.color,
-  });
+  const _TagBadge({required this.label, required this.color});
 
   final String label;
   final Color color;
@@ -664,9 +652,9 @@ class _TagBadge extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
+          color: color,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }

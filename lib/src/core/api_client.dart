@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../models/alert_models.dart';
+import '../models/ai_prediction_models.dart';
 import '../models/auth_models.dart';
 import '../models/pack_models.dart';
 import '../models/request_models.dart';
@@ -174,6 +175,44 @@ class ApiClient {
       query: {'limit': '$limit'},
       parser: (json) =>
           asJsonList(json).map(AlertItem.fromJson).toList(growable: false),
+    );
+  }
+
+  Future<List<AiPrediction>> getAiPredictionsLatest() async {
+    return _send(
+      'GET',
+      '/ai/predictions/latest',
+      parser: (json) => asJsonList(json)
+          .map(AiPrediction.fromJson)
+          .toList(growable: false),
+    );
+  }
+
+  Future<AiPrediction> getAiPredictionLatest(String bmsId) async {
+    return _send(
+      'GET',
+      '/ai/predictions/$bmsId/latest',
+      parser: (json) => AiPrediction.fromJson(asJsonMap(json)),
+    );
+  }
+
+  Future<List<AiPrediction>> getAiPredictionHistory(String bmsId) async {
+    return _send(
+      'GET',
+      '/ai/predictions/$bmsId/history',
+      parser: (json) => asJsonList(json)
+          .map(AiPrediction.fromJson)
+          .toList(growable: false),
+    );
+  }
+
+  Future<AiPredictionRefreshResponse> refreshAiPrediction(String bmsId) async {
+    return _send(
+      'POST',
+      '/ai/predictions/$bmsId/refresh',
+      body: const <String, Object?>{},
+      parser: (json) =>
+          AiPredictionRefreshResponse.fromJson(asJsonMap(json)),
     );
   }
 

@@ -237,9 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.coral,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.coral),
             child: const Text('Reject'),
           ),
         ],
@@ -300,9 +298,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   alignment: Alignment.center,
                   child: Text(
                     _initials(user?.fullName),
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.headlineSmall?.copyWith(color: Colors.white),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -329,13 +327,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 16),
         SectionCard(
           title: 'Account details',
-          subtitle: 'Your current profile and session information.',
           child: Column(
             children: [
-              MetricRow(
-                label: 'User ID',
-                value: user?.id.toString() ?? '-',
-              ),
+              MetricRow(label: 'User ID', value: user?.id.toString() ?? '-'),
               MetricRow(label: 'Role', value: user?.role ?? '-'),
               MetricRow(
                 label: 'Email verified',
@@ -346,17 +340,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 16),
         if (_requestInfo != null) ...[
-          _InfoBanner(
-            color: AppColors.success,
-            message: _requestInfo!,
-          ),
+          _InfoBanner(color: AppColors.success, message: _requestInfo!),
           const SizedBox(height: 16),
         ],
         if (_requestError != null) ...[
-          _InfoBanner(
-            color: AppColors.danger,
-            message: _requestError!,
-          ),
+          _InfoBanner(color: AppColors.danger, message: _requestError!),
           const SizedBox(height: 16),
         ],
         if (user?.isAdmin == true) ...[
@@ -375,22 +363,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   )
                 : _requests.isEmpty
-                    ? const Text(
-                        'There are no pending package requests right now.')
-                    : Column(
-                        children: _requests
-                            .map(
-                              (request) => Padding(
-                                padding: const EdgeInsets.only(bottom: 14),
-                                child: _AdminRequestCard(
-                                  request: request,
-                                  onApprove: () => _approveRequest(request),
-                                  onReject: () => _rejectRequest(request),
-                                ),
-                              ),
-                            )
-                            .toList(growable: false),
-                      ),
+                ? const Text('There are no pending package requests right now.')
+                : Column(
+                    children: _requests
+                        .map(
+                          (request) => Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: _AdminRequestCard(
+                              request: request,
+                              onApprove: () => _approveRequest(request),
+                              onReject: () => _rejectRequest(request),
+                            ),
+                          ),
+                        )
+                        .toList(growable: false),
+                  ),
           ),
           const SizedBox(height: 16),
         ] else ...[
@@ -455,18 +442,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   )
                 : _requests.isEmpty
-                    ? const Text(
-                        'You have not submitted any package requests yet.')
-                    : Column(
-                        children: _requests
-                            .map(
-                              (request) => Padding(
-                                padding: const EdgeInsets.only(bottom: 14),
-                                child: _RequestHistoryCard(request: request),
-                              ),
-                            )
-                            .toList(growable: false),
-                      ),
+                ? const Text('You have not submitted any package requests yet.')
+                : Column(
+                    children: _requests
+                        .map(
+                          (request) => Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: _RequestHistoryCard(request: request),
+                          ),
+                        )
+                        .toList(growable: false),
+                  ),
           ),
           const SizedBox(height: 16),
         ],
@@ -489,18 +475,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return 'BP';
     }
 
-    final parts =
-        cleaned.split(RegExp(r'\s+')).where((part) => part.isNotEmpty);
+    final parts = cleaned
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty);
     final letters = parts.take(2).map((part) => part[0].toUpperCase()).join();
     return letters.isEmpty ? 'BP' : letters;
   }
 }
 
 class _InfoBanner extends StatelessWidget {
-  const _InfoBanner({
-    required this.color,
-    required this.message,
-  });
+  const _InfoBanner({required this.color, required this.message});
 
   final Color color;
   final String message;

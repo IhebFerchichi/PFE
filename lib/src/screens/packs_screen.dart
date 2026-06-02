@@ -82,13 +82,12 @@ class _PacksScreenState extends State<PacksScreen> {
       final packs = results[0] as List<VisiblePack>;
       setState(() {
         _packs = packs;
-        _selectedPackCode = packs.any(
-          (pack) => pack.packageCode == _selectedPackCode,
-        )
+        _selectedPackCode =
+            packs.any((pack) => pack.packageCode == _selectedPackCode)
             ? _selectedPackCode
             : packs.isNotEmpty
-                ? packs.first.packageCode
-                : null;
+            ? packs.first.packageCode
+            : null;
         _lfpLatest = results[1] as List<PackTelemetry>;
         _supercapLatest = results[2] as List<PackTelemetry>;
         _lfpCells = results[3] as List<CellTelemetry>;
@@ -282,8 +281,9 @@ class _PacksScreenState extends State<PacksScreen> {
 
   List<PackHistoryPoint> get _selectedHistoryRows {
     final bmsId = _selectedBmsId;
-    final source =
-        _selectedType == PackType.lfp ? _lfpHistory : _supercapHistory;
+    final source = _selectedType == PackType.lfp
+        ? _lfpHistory
+        : _supercapHistory;
 
     if (bmsId == null) {
       return const [];
@@ -326,8 +326,9 @@ class _PacksScreenState extends State<PacksScreen> {
   Widget build(BuildContext context) {
     final selectedPack = _selectedPack;
     final selectedTelemetry = _selectedTelemetry;
-    final chartColor =
-        _selectedType == PackType.lfp ? AppColors.ocean : AppColors.coral;
+    final chartColor = _selectedType == PackType.lfp
+        ? AppColors.ocean
+        : AppColors.coral;
     final cellChartValues = _selectedCellHistory
         .map((point) => point.cellVoltage)
         .whereType<double>()
@@ -358,7 +359,7 @@ class _PacksScreenState extends State<PacksScreen> {
               title: 'Select pack',
               subtitle: _packs.isEmpty
                   ? 'Nothing is approved for this user yet.'
-                  : 'Switch between approved battery packages and inspect mobile telemetry.',
+                  : 'Switch between battery packages and inspect mobile telemetry.',
               child: _packs.isEmpty
                   ? const SizedBox.shrink()
                   : SizedBox(
@@ -429,8 +430,10 @@ class _PacksScreenState extends State<PacksScreen> {
                     ),
                     MetricRow(
                       label: 'Temperature',
-                      value:
-                          formatNumber(selectedTelemetry?.temperature, 'deg C'),
+                      value: formatNumber(
+                        selectedTelemetry?.temperature,
+                        'deg C',
+                      ),
                     ),
                     MetricRow(
                       label: 'Last update',
@@ -442,8 +445,7 @@ class _PacksScreenState extends State<PacksScreen> {
               const SizedBox(height: 16),
               SectionCard(
                 title: 'Trends',
-                subtitle:
-                    'Recent mobile-friendly history for the selected lane.',
+                subtitle: 'Recent history for the selected lane.',
                 child: Column(
                   children: [
                     MetricChartCard(
@@ -488,15 +490,16 @@ class _PacksScreenState extends State<PacksScreen> {
                           final borderColor = isBalancing
                               ? AppColors.danger
                               : isSelected
-                                  ? chartColor
-                                  : AppColors.line;
+                              ? chartColor
+                              : AppColors.line;
                           final backgroundColor = isBalancing
                               ? AppColors.danger.withValues(alpha: 0.12)
                               : isSelected
-                                  ? chartColor.withValues(alpha: 0.08)
-                                  : Colors.white;
-                          final titleColor =
-                              isBalancing ? AppColors.danger : null;
+                              ? chartColor.withValues(alpha: 0.08)
+                              : Colors.white;
+                          final titleColor = isBalancing
+                              ? AppColors.danger
+                              : null;
                           final valueColor = isBalancing
                               ? AppColors.danger
                               : Theme.of(context).textTheme.bodyMedium?.color;
@@ -513,8 +516,10 @@ class _PacksScreenState extends State<PacksScreen> {
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(18),
-                                border:
-                                    Border.all(color: borderColor, width: 1.2),
+                                border: Border.all(
+                                  color: borderColor,
+                                  width: 1.2,
+                                ),
                                 color: backgroundColor,
                               ),
                               child: Column(
@@ -544,9 +549,7 @@ class _PacksScreenState extends State<PacksScreen> {
                                   const SizedBox(height: 6),
                                   Text(
                                     isBalancing ? 'Balancing on' : 'Stable',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
+                                    style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
                                           color: statusColor,
                                           fontWeight: isBalancing
@@ -567,8 +570,7 @@ class _PacksScreenState extends State<PacksScreen> {
                 const SizedBox(height: 16),
                 SectionCard(
                   title: 'Cell $_selectedCellIndex history',
-                  subtitle:
-                      'Last hour of cell voltage from the backend history endpoints.',
+                  subtitle: 'Last hour of cell voltage .',
                   child: MetricChartCard(
                     title: 'Cell voltage',
                     unit: 'V',
@@ -598,8 +600,9 @@ class _LaneHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final laneColor =
-        selectedType == PackType.lfp ? AppColors.ocean : AppColors.coral;
+    final laneColor = selectedType == PackType.lfp
+        ? AppColors.ocean
+        : AppColors.coral;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -608,10 +611,7 @@ class _LaneHero extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            laneColor.withValues(alpha: 0.18),
-            Colors.white,
-          ],
+          colors: [laneColor.withValues(alpha: 0.18), Colors.white],
         ),
         border: Border.all(color: AppColors.line),
       ),
@@ -621,8 +621,10 @@ class _LaneHero extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: laneColor.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
@@ -630,9 +632,9 @@ class _LaneHero extends StatelessWidget {
                 child: Text(
                   selectedType.label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: laneColor,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    color: laneColor,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -701,17 +703,14 @@ class _HeroMetric extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 6),
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),

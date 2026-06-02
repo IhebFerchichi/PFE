@@ -96,13 +96,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ]);
 
       final packs = results[0] as List<VisiblePack>;
-      final selectedPackCode = packs.any(
-        (pack) => pack.packageCode == _selectedPackCode,
-      )
+      final selectedPackCode =
+          packs.any((pack) => pack.packageCode == _selectedPackCode)
           ? _selectedPackCode
           : packs.isNotEmpty
-              ? packs.first.packageCode
-              : null;
+          ? packs.first.packageCode
+          : null;
 
       setState(() {
         _packs = packs;
@@ -212,8 +211,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final selectedPack = _selectedPack;
     final lfpTelemetry = _latestFor(selectedPack?.lfpBmsId, _lfpLatest);
-    final supercapTelemetry =
-        _latestFor(selectedPack?.supercapBmsId, _supercapLatest);
+    final supercapTelemetry = _latestFor(
+      selectedPack?.supercapBmsId,
+      _supercapLatest,
+    );
     final hasData = !_loading && _error == null;
 
     return RefreshIndicator(
@@ -224,8 +225,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           SectionCard(
             title: 'Field Snapshot',
-            subtitle:
-                'A mobile-first summary of the same backend telemetry that the web console is reading.',
             action: IconButton(
               tooltip: 'Refresh',
               onPressed: _loading ? null : _load,
@@ -237,7 +236,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const spacing = 12.0;
                 final itemWidth =
                     (constraints.maxWidth - ((columns - 1) * spacing)) /
-                        columns;
+                    columns;
 
                 final tiles = [
                   StatTile(
@@ -311,7 +310,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: 'Package context',
               subtitle: _packs.isEmpty
                   ? 'No approved package is available for this account yet.'
-                  : 'Choose which logical pack the overview should represent.',
+                  : 'Choose which  pack the overview should represent.',
               child: _packs.isEmpty
                   ? const SizedBox.shrink()
                   : SizedBox(
@@ -388,9 +387,9 @@ class _OverviewSpotlight extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accentText = Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Colors.white70,
-          fontWeight: FontWeight.w600,
-        );
+      color: Colors.white70,
+      fontWeight: FontWeight.w600,
+    );
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -419,32 +418,31 @@ class _OverviewSpotlight extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Selected Package',
-                      style: accentText,
-                    ),
+                    Text('Selected Package', style: accentText),
                     const SizedBox(height: 6),
                     Text(
                       pack.displayName,
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                              ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       '${pack.ownerFullName}  ${pack.packageCode}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.86),
-                          ),
+                        color: Colors.white.withValues(alpha: 0.86),
+                      ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(18),
@@ -452,17 +450,14 @@ class _OverviewSpotlight extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Alerts',
-                      style: accentText,
-                    ),
+                    Text('Alerts', style: accentText),
                     const SizedBox(height: 2),
                     Text(
                       '$alertCount',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                          ),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
@@ -487,10 +482,7 @@ class _OverviewSpotlight extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _SpotlightMetric(
-                  label: 'Status',
-                  value: pack.status,
-                ),
+                child: _SpotlightMetric(label: 'Status', value: pack.status),
               ),
             ],
           ),
@@ -501,10 +493,7 @@ class _OverviewSpotlight extends StatelessWidget {
 }
 
 class _SpotlightMetric extends StatelessWidget {
-  const _SpotlightMetric({
-    required this.label,
-    required this.value,
-  });
+  const _SpotlightMetric({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -522,17 +511,17 @@ class _SpotlightMetric extends StatelessWidget {
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white70,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.white70),
           ),
           const SizedBox(height: 6),
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
